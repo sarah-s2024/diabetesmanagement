@@ -241,15 +241,22 @@ main{padding:16px 20px;max-width:900px;margin:0 auto}
     <!-- CGM page -->
     <div id="page-cgm" class="page">
       <div class="card">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
           <span>CGM 血糖曲线</span>
-          <select id="cgmRange" onchange="renderCgmChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
-            <option value="1">今日</option>
-            <option value="3">近3天</option>
-            <option value="7" selected>近7天</option>
-            <option value="14">近14天</option>
-            <option value="30">近30天</option>
-          </select>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <select id="cgmQuick" onchange="applyQuickRange()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
+              <option value="">自定义</option>
+              <option value="1">今日</option>
+              <option value="3">近3天</option>
+              <option value="7">近7天</option>
+              <option value="14">近14天</option>
+              <option value="30">近30天</option>
+              <option value="all">全部数据</option>
+            </select>
+            <input type="date" id="cgmFrom" onchange="renderCgmChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
+            <span style="font-size:12px;color:var(--muted)">至</span>
+            <input type="date" id="cgmTo" onchange="renderCgmChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
+          </div>
         </div>
         <div class="metric-grid" style="margin-bottom:12px">
           <div class="metric-card"><div class="metric-label">均值</div><div class="metric-val" id="cgm-avg">--</div></div>
@@ -501,17 +508,19 @@ function showPage(id, btn) {
 // ---- Load data ----
 async function loadAllData() {
   if (!sb) return;
-  await Promise.all([loadCgmData(), loadDailyRecords()]);
+  // Load CGM with no date restriction first, then render
+  await Promise.all([loadCgmData(null, null), loadDailyRecords()]);
   renderDashboard();
 }
 
-async function loadCgmData() {
-  const since = new Date(Date.now() - 30 * 86400000).toISOString();
-  const { data, error } = await sb.from('cgm_readings')
+async function loadCgmData(from, to) {
+  let query = sb.from('cgm_readings')
     .select('device_timestamp,glucose_mg_dl')
-    .gte('device_timestamp', since)
     .not('glucose_mg_dl', 'is', null)
     .order('device_timestamp', { ascending: true });
+  if (from) query = query.gte('device_timestamp', from);
+  if (to)   query = query.lte('device_timestamp', to);
+  const { data, error } = await query;
   if (!error && data) cgmData = data;
 }
 
@@ -581,10 +590,32 @@ function renderDashboard() {
 }
 
 // ---- CGM Chart ----
+function applyQuickRange() {
+  const val = document.getElementById('cgmQuick').value;
+  if (!val) return;
+  const to = new Date();
+  let from = null;
+  if (val === 'all') {
+    document.getElementById('cgmFrom').value = '';
+    document.getElementById('cgmTo').value = '';
+  } else {
+    from = new Date(Date.now() - parseInt(val) * 86400000);
+    document.getElementById('cgmFrom').value = from.toISOString().slice(0,10);
+    document.getElementById('cgmTo').value = to.toISOString().slice(0,10);
+  }
+  renderCgmChart();
+}
+
 function renderCgmChart() {
-  const days = parseInt(document.getElementById('cgmRange').value);
-  const since = new Date(Date.now() - days*86400000);
-  const filtered = cgmData.filter(d=>new Date(d.device_timestamp)>=since);
+  const fromVal = document.getElementById('cgmFrom').value;
+  const toVal   = document.getElementById('cgmTo').value;
+  const fromTs  = fromVal ? new Date(fromVal).getTime() : null;
+  const toTs    = toVal   ? new Date(toVal+'T23:59:59').getTime() : null;
+
+  const filtered = cgmData.filter(d => {
+    const t = new Date(d.device_timestamp).getTime();
+    return (!fromTs || t >= fromTs) && (!toTs || t <= toTs);
+  });
   if (!filtered.length) return;
 
   const vals = filtered.map(d=>Math.round(d.glucose_mg_dl));
