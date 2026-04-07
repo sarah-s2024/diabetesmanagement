@@ -644,23 +644,28 @@ function handleFile(file) {
 
 function parseLibreCSV(text) {
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  // Find header row (Libre 3 CSV has metadata rows at top)
-  let headerIdx = lines.findIndex(l => l.toLowerCase().includes('device timestamp') || l.toLowerCase().includes('時間') || l.includes('Gerätezeitstempel'));
-  if (headerIdx === -1) headerIdx = lines.findIndex(l => /\d{4}[-\/]\d{2}[-\/]\d{2}/.test(l.split(',')[0]) || l.split(',').length > 3);
 
-  const headers = headerIdx >= 0 ? lines[headerIdx].split(',').map(h=>h.replace(/"/g,'').trim()) : [];
+  // Find header row containing "Device Timestamp"
+  let headerIdx = lines.findIndex(l => l.toLowerCase().includes('device timestamp'));
+  if (headerIdx === -1) { showStatus('❌ 未找到 Device Timestamp 列，请确认是 FreeStyle Libre 导出的 CSV'); return; }
+
+  const headers = lines[headerIdx].split(',').map(h=>h.replace(/"/g,'').trim().toLowerCase());
+  const tsCol = headers.findIndex(h=>h.includes('device timestamp'));
+  const rtCol = headers.findIndex(h=>h.includes('record type'));
+  const hgCol = headers.findIndex(h=>h.includes('historic glucose'));
+  const sgCol = headers.findIndex(h=>h.includes('scan glucose'));
+
   const dataLines = lines.slice(headerIdx + 1);
-
   parsedCSV = [];
+
   for (const line of dataLines) {
     const cols = line.split(',').map(c=>c.replace(/"/g,'').trim());
     if (cols.length < 3) continue;
-    // Try multiple column positions (Libre exports vary by locale)
-    const tsRaw = cols[0] || cols[2];
-    const ts = parseTimestamp(tsRaw);
+    const ts = parseTimestamp(cols[tsCol]);
     if (!ts) continue;
-    const glucose = parseFloat(cols[7]) || parseFloat(cols[4]) || parseFloat(cols[5]) || null;
-    const recordType = parseInt(cols[1]) || 0;
+    const glucose = parseFloat(cols[hgCol] !== undefined ? cols[hgCol] : '') ||
+                    parseFloat(cols[sgCol] !== undefined ? cols[sgCol] : '') || null;
+    const recordType = parseInt(cols[rtCol]) || 0;
     if (glucose && glucose > 30 && glucose < 600) {
       parsedCSV.push({ device_timestamp: ts.toISOString(), glucose_mg_dl: glucose, record_type: recordType });
     }
@@ -683,11 +688,21 @@ function parseLibreCSV(text) {
 
 function parseTimestamp(raw) {
   if (!raw) return null;
-  const d = new Date(raw.replace(/\//g,'-'));
-  if (!isNaN(d.getTime())) return d;
-  // DD-MM-YYYY HH:MM format
-  const m = raw.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})\s+(\d{2}):(\d{2})/);
-  if (m) return new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:00`);
+  // MM-DD-YYYY HH:MM AM/PM  (FreeStyle Libre 3 US format)
+  const m12 = raw.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (m12) {
+    let h = parseInt(m12[4]);
+    const min = m12[5], ampm = m12[6].toUpperCase();
+    if (ampm === 'PM' && h !== 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return new Date(`${m12[3]}-${m12[1]}-${m12[2]}T${String(h).padStart(2,'0')}:${min}:00`);
+  }
+  // YYYY-MM-DD HH:MM
+  const iso = new Date(raw.replace(/\//g,'-'));
+  if (!isNaN(iso.getTime())) return iso;
+  // DD-MM-YYYY HH:MM
+  const mdmy = raw.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})\s+(\d{2}):(\d{2})/);
+  if (mdmy) return new Date(`${mdmy[3]}-${mdmy[2]}-${mdmy[1]}T${mdmy[4]}:${mdmy[5]}:00`);
   return null;
 }
 
