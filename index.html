@@ -434,14 +434,16 @@ function checkPw() {
 }
 
 function unlock() {
+  sessionStorage.setItem('dm_unlocked', '1');
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   initSupabase();
   setTodayDate();
-  loadAllData();
+  setTimeout(loadAllData, 300); // slight delay to ensure sb client is ready
 }
 
 function lock() {
+  sessionStorage.removeItem('dm_unlocked');
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   document.getElementById('pwInput').value = '';
@@ -844,15 +846,29 @@ function showStatus(msg, ms=3000) {
 }
 
 // ---- Init ----
-if (!localStorage.getItem(APP_PW_KEY)) {
-  document.getElementById('lockScreen').innerHTML = `
-    <div class="lock-box">
-      <div style="font-size:36px;margin-bottom:12px">⚙️</div>
-      <h2>首次设置</h2>
-      <p>请先配置 Supabase 连接和访问密码</p>
-      <button onclick="document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';openConfig()">开始配置</button>
-    </div>`;
-}
+(function init() {
+  const hasPw = localStorage.getItem(APP_PW_KEY);
+  const hasUrl = localStorage.getItem(SUPABASE_URL_KEY);
+  const hasKey = localStorage.getItem(SUPABASE_KEY_KEY);
+
+  if (!hasPw || !hasUrl || !hasKey) {
+    // First time — show setup screen
+    document.getElementById('lockScreen').innerHTML = `
+      <div class="lock-box">
+        <div style="font-size:36px;margin-bottom:12px">⚙️</div>
+        <h2>首次设置</h2>
+        <p>请先配置 Supabase 连接和访问密码</p>
+        <button onclick="document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';openConfig()">开始配置</button>
+      </div>`;
+    return;
+  }
+
+  // Config exists — check if session is still unlocked (sessionStorage flag)
+  if (sessionStorage.getItem('dm_unlocked') === '1') {
+    unlock();
+  }
+  // else: show lock screen with password prompt (already rendered by default)
+})();
 </script>
 </body>
 </html>
