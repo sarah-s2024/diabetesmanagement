@@ -701,7 +701,7 @@ async function uploadToSupabase() {
   let uploaded = 0;
   for (let i = 0; i < parsedCSV.length; i += batchSize) {
     const batch = parsedCSV.slice(i, i+batchSize);
-    const { error } = await sb.from('cgm_readings').upsert(batch, { onConflict: 'device_timestamp' });
+    const { error } = await sb.from('cgm_readings').upsert(batch, { onConflict: 'device_timestamp', ignoreDuplicates: true });
     if (error) { showStatus('❌ 上传失败：' + error.message); return; }
     uploaded += batch.length;
     document.getElementById('uploadMsg').textContent = `上传中... ${uploaded}/${parsedCSV.length} 条`;
