@@ -2,166 +2,165 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>血糖管理系统</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>血糖管理</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f8f9fa;--card:#fff;--border:#e5e7eb;--text:#111;--muted:#6b7280;
-  --green:#15803d;--green-bg:#f0fdf4;--green-b:#bbf7d0;
-  --amber:#92400e;--amber-bg:#fffbeb;--amber-b:#fde68a;
-  --red:#991b1b;--red-bg:#fef2f2;--red-b:#fecaca;
-  --blue:#1e40af;--blue-bg:#eff6ff;--blue-b:#bfdbfe;
-  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08);
+  --bg:#06080f;--surface:#0e1117;--surface2:#141821;
+  --border:rgba(255,255,255,.08);--text:#f0f2f8;--muted:#7b8299;
+  --accent:#8b5cf6;--accent2:#6d28d9;
+  --green:#34d399;--green-dim:rgba(52,211,153,.15);
+  --red:#f87171;--red-dim:rgba(248,113,113,.15);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,.15);
+  --blue:#60a5fa;--blue-dim:rgba(96,165,250,.15);
+  --radius:16px;--radius-sm:10px;--nav-h:68px;
 }
-@media(prefers-color-scheme:dark){
-  :root{--bg:#0f1117;--card:#1a1d24;--border:#2d3139;--text:#f0f0f0;--muted:#9ca3af;
-    --green:#4ade80;--green-bg:#052e16;--green-b:#166534;
-    --amber:#fbbf24;--amber-bg:#1c1500;--amber-b:#78350f;
-    --red:#f87171;--red-bg:#1f0a0a;--red-b:#7f1d1d;
-    --blue:#60a5fa;--blue-bg:#0a1628;--blue-b:#1e3a6e;
-  }
-}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:var(--nav-h);-webkit-font-smoothing:antialiased}
 
-/* Lock screen */
+/* Lock */
 #lockScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
-.lock-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:320px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.1)}
-.lock-box h2{font-size:20px;font-weight:600;margin-bottom:6px}
-.lock-box p{font-size:13px;color:var(--muted);margin-bottom:24px}
-.lock-box input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:15px;background:var(--card);color:var(--text);margin-bottom:12px;text-align:center;letter-spacing:4px}
-.lock-box button{width:100%;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-weight:500}
-.lock-err{color:var(--red);font-size:12px;margin-top:8px;min-height:18px}
+.lock-box{background:rgba(14,17,23,.97);border:1px solid var(--border);border-radius:24px;padding:44px 36px;width:340px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.6),0 0 0 1px rgba(139,92,246,.12)}
+.lock-icon{font-size:44px;margin-bottom:14px;display:block;filter:drop-shadow(0 0 18px rgba(139,92,246,.5))}
+.lock-box h2{font-size:22px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lock-box p{font-size:13px;color:var(--muted);margin-bottom:26px}
+.lock-box input{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:12px;font-size:18px;letter-spacing:6px;text-align:center;background:var(--surface2);color:var(--text);margin-bottom:14px;outline:none;transition:.2s}
+.lock-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,.2)}
+.lock-box button{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;border:none;border-radius:12px;font-size:15px;cursor:pointer;font-weight:600;box-shadow:0 4px 20px rgba(139,92,246,.4);transition:.2s}
+.lock-box button:hover{opacity:.9}
+.lock-err{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
 
 /* Config modal */
-#configModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;align-items:center;justify-content:center}
+#configModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);z-index:998;align-items:center;justify-content:center}
 #configModal.show{display:flex}
-.modal-box{background:var(--card);border-radius:16px;padding:28px;width:min(480px,92vw);max-height:80vh;overflow-y:auto}
-.modal-box h3{font-size:16px;font-weight:600;margin-bottom:16px}
-.form-row{margin-bottom:12px}
-.form-row label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
-.form-row input{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text)}
-.modal-btns{display:flex;gap:8px;margin-top:16px}
-.btn{padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);font-weight:500}
-.btn-primary{background:#3b82f6;color:#fff;border-color:#3b82f6}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;width:min(500px,94vw);max-height:85vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.modal-box h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-row input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:var(--surface2);color:var(--text);outline:none;transition:.2s}
+.form-row input:focus{border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px;margin-top:18px}
+.btn{padding:9px 18px;border-radius:10px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:500}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;border:none;box-shadow:0 4px 14px rgba(139,92,246,.3)}
 
-/* App layout */
+/* App */
 #app{display:none}
-header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-header h1{font-size:16px;font-weight:600}
-.header-right{display:flex;gap:8px;align-items:center}
-.icon-btn{padding:6px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--card);color:var(--text);font-size:12px}
-nav{display:flex;gap:4px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
-nav::-webkit-scrollbar{display:none}
-.nav-btn{padding:6px 14px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:transparent;color:var(--muted);white-space:nowrap;transition:all .15s}
-.nav-btn.active{background:#3b82f6;color:#fff;border-color:#3b82f6}
-main{padding:16px 20px;max-width:900px;margin:0 auto}
+.app-bar{position:sticky;top:0;z-index:50;background:var(--bg)}
+.app-bar-inner{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid var(--border)}
+.app-title{font-size:17px;font-weight:700;background:linear-gradient(135deg,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.bar-actions{display:flex;gap:6px;align-items:center}
+.icon-btn{padding:5px 11px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--surface2);color:var(--muted);font-size:12px;transition:.15s}
+.icon-btn:hover{color:var(--text)}
+#connStatus{font-size:11px;color:var(--muted)}
+
+main{padding:16px 18px;max-width:620px;margin:0 auto}
 .page{display:none}.page.active{display:block}
 
-/* Cards & grids */
-.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-.metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
-.metric-label{font-size:11px;color:var(--muted);margin-bottom:6px}
-.metric-val{font-size:22px;font-weight:600}
-.metric-sub{font-size:11px;color:var(--muted);margin-top:3px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
-.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
-.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
-.row:last-child{border-bottom:none}
-.badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500}
-.b-green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b)}
-.b-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-b)}
-.b-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-b)}
-.b-blue{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-b)}
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:rgba(14,17,23,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 6px env(safe-area-inset-bottom,0);z-index:100}
+.nav-tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;cursor:pointer;border:none;background:none;color:var(--muted);font-size:10px;letter-spacing:.3px;transition:.2s;border-radius:12px;min-width:52px}
+.nav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-tab.active{color:var(--accent)}
+.nav-tab.active svg{stroke:var(--accent)}
 
-/* Table */
-.tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border)}
-.tbl td{padding:8px 10px;border-bottom:1px solid var(--border)}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:var(--bg)}
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
 
-/* Upload zone */
-.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:.2s}
-.upload-zone:hover,.upload-zone.drag{border-color:#3b82f6;background:var(--blue-bg)}
-.upload-zone input{display:none}
-.upload-icon{font-size:32px;margin-bottom:8px}
-.upload-zone p{font-size:13px;color:var(--muted)}
-.upload-zone strong{color:#3b82f6}
+/* TIR Ring hero */
+.tir-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:22px 0 14px}
+.tir-ring-container{position:relative;width:200px;height:200px}
+.tir-ring-svg{width:200px;height:200px;transform:rotate(-90deg)}
+.tir-ring-bg{fill:none;stroke:var(--surface2);stroke-width:16}
+.tir-ring-track{fill:none;stroke-width:16;stroke-linecap:round;transition:stroke-dasharray .9s cubic-bezier(.4,0,.2,1)}
+.tir-ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.tir-score-num{font-size:50px;font-weight:800;letter-spacing:-2px;line-height:1;background:linear-gradient(135deg,#a78bfa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tir-score-lbl{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.3px}
+.tir-score-sub{font-size:12px;margin-top:4px;font-weight:500}
 
-/* Chart wrapper */
-.chart-wrap{position:relative;width:100%}
-
-/* Tabs */
-.tab-row{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:0}
-.tab{padding:6px 14px;font-size:13px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
-.tab.active{color:#3b82f6;border-bottom-color:#3b82f6;font-weight:500}
-
-/* Form */
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
-.field input,.field select,.field textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--card);color:var(--text)}
-.field textarea{resize:vertical;min-height:60px}
+/* Metrics */
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px}
+.metric-label{font-size:10px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.metric-val{font-size:22px;font-weight:700}
+.metric-sub{font-size:10px;color:var(--muted);margin-top:3px}
 
 /* TIR bar */
-.tir-bar{display:flex;height:20px;border-radius:6px;overflow:hidden;gap:1px;margin:8px 0}
-.tir-seg{display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;transition:width .4s}
-.tir-legend{display:flex;gap:12px;font-size:11px;color:var(--muted);flex-wrap:wrap;margin-top:6px}
+.tir-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:10px 0}
+.tir-seg{border-radius:4px;transition:width .4s}
+.tir-legend{display:flex;gap:10px;font-size:10px;color:var(--muted);flex-wrap:wrap}
 .tir-legend span{display:flex;align-items:center;gap:4px}
-.dot{width:8px;height:8px;border-radius:50%}
+.dot{width:6px;height:6px;border-radius:50%}
 
-/* Status bar */
-#statusBar{position:fixed;bottom:16px;right:16px;background:#1e293b;color:#f1f5f9;font-size:12px;padding:8px 14px;border-radius:8px;z-index:100;display:none;max-width:300px}
+/* Tabs */
+.tab-row{display:flex;gap:3px;margin-bottom:14px;background:var(--surface2);border-radius:10px;padding:3px}
+.tab{flex:1;padding:7px 10px;font-size:12px;cursor:pointer;color:var(--muted);border-radius:8px;text-align:center;transition:.2s;font-weight:500}
+.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.dash-tab{display:none}.dash-tab.active{display:block}
 
-/* Range labels */
-.range-tip{background:var(--green-bg);border:1px solid var(--green-b);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:12px;line-height:1.7}
+/* BMI */
+.bmi-wrap{text-align:center}
 
-/* AI analysis */
-.ai-btn{width:100%;padding:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;transition:.2s}
-.ai-btn:hover{opacity:.9}
-.ai-btn:disabled{opacity:.6;cursor:not-allowed}
-.ai-result{margin-top:14px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;display:none}
+/* Chart */
+.chart-wrap{position:relative;width:100%}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 10px;font-size:10px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600}
+.b-green{background:var(--green-dim);color:var(--green)}
+.b-amber{background:var(--amber-dim);color:var(--amber)}
+.b-red{background:var(--red-dim);color:var(--red)}
+.b-blue{background:var(--blue-dim);color:var(--blue)}
+
+/* Upload */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:.2s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(139,92,246,.06)}
+.upload-zone input{display:none}
+.upload-icon{font-size:32px;margin-bottom:10px}
+.upload-zone p{font-size:13px;color:var(--muted)}
+.upload-zone strong{color:var(--accent)}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface2);color:var(--text);outline:none;transition:.2s}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:64px}
+.range-tip{background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:rgba(167,139,250,.9);margin-bottom:12px;line-height:1.7}
+
+/* AI */
+.ai-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;box-shadow:0 4px 20px rgba(139,92,246,.3)}
+.ai-btn:hover{opacity:.9;transform:translateY(-1px)}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.ai-result{margin-top:16px;font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;display:none;background:var(--surface2);border-radius:12px;padding:14px;border:1px solid var(--border)}
 .ai-result.show{display:block}
-.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+.ai-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-@media(max-width:600px){
-  main{padding:12px}
-  .metric-grid{grid-template-columns:repeat(2,1fr)}
-}
+/* Risk */
+.risk-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.risk-card.danger{border-color:rgba(248,113,113,.25);background:rgba(248,113,113,.05)}
+.risk-card.warn{border-color:rgba(251,191,36,.2);background:rgba(251,191,36,.04)}
 
-/* ===== Modern redesign ===== */
-body{background:linear-gradient(160deg,#eef2ff 0%,#f8faff 45%,#faf5ff 100%)}
-@media(prefers-color-scheme:dark){body{background:linear-gradient(160deg,#0c0e18 0%,#0f1117 50%,#110e18 100%)}}
-header{background:linear-gradient(135deg,#1e1b4b,#3730a3);border-bottom:none;box-shadow:0 2px 20px rgba(30,27,75,.3)}
-header h1{color:#fff}
-.icon-btn{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.2);color:#fff}
-#connStatus{color:rgba(255,255,255,.65)!important}
-nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;padding:10px 20px}
-.nav-btn{color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.15)}
-.nav-btn:hover{color:#fff}
-.nav-btn.active{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)}
-.card{border-radius:14px;box-shadow:0 2px 14px rgba(0,0,0,.07)}
-.metric-card{border-radius:12px;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+/* Status */
+#statusBar{position:fixed;bottom:calc(var(--nav-h) + 10px);right:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;padding:10px 16px;border-radius:10px;z-index:200;display:none;max-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 
-/* Dashboard hero */
-.dash-hero{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4c1d95 100%);border-radius:16px;padding:18px 22px;margin-bottom:14px;color:#fff;box-shadow:0 8px 32px rgba(49,46,129,.28)}
-.hero-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
-.hero-stat{text-align:center;flex:1;min-width:60px}
-.hero-stat-lbl{font-size:10px;opacity:.65;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
-.hero-stat-val{font-size:17px;font-weight:700;line-height:1.15}
-.d-status{font-size:12px;opacity:.8;margin-top:4px}
-.target-pill{display:inline-flex;padding:5px 13px;border-radius:20px;background:var(--green-bg);border:1px solid var(--green-b);color:var(--green);font-size:12px;font-weight:500;margin-right:6px;margin-bottom:6px}
-.dash-tab{display:none}
-.dash-tab.active{display:block}
-.tab-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.07)}
-.tab-card .tab-row{padding:0 16px;margin:0;background:var(--bg);border-bottom:1px solid var(--border)}
-.tab-card .dash-tab{padding:16px}
-.bmi-wrap{text-align:center;flex:0 0 auto}
-.meal-list div{padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
+/* Misc */
+.row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.meal-list div{padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted)}
 .meal-list div:last-child{border-bottom:none}
+.target-pill{display:inline-flex;padding:4px 12px;border-radius:20px;background:var(--green-dim);color:var(--green);font-size:11px;font-weight:500;margin-right:6px;margin-bottom:6px}
+.section-header{font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-.3px}
+.section-sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+@media(max-width:400px){main{padding:12px 14px}.metric-grid{gap:8px}}
 </style>
 </head>
 <body>
@@ -169,11 +168,11 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
 <!-- Lock screen -->
 <div id="lockScreen">
   <div class="lock-box">
-    <div style="font-size:36px;margin-bottom:12px">🩺</div>
-    <h2>血糖管理系统</h2>
+    <span class="lock-icon">💉</span>
+    <h2>血糖管理</h2>
     <p>家庭健康数据，请输入访问密码</p>
     <input type="password" id="pwInput" placeholder="••••••" onkeydown="if(event.key==='Enter')checkPw()">
-    <button onclick="checkPw()">进入</button>
+    <button onclick="checkPw()">解锁</button>
     <div class="lock-err" id="lockErr"></div>
   </div>
 </div>
@@ -181,19 +180,19 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
 <!-- Config modal -->
 <div id="configModal">
   <div class="modal-box">
-    <h3>⚙️ Supabase 连接配置</h3>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">在 Supabase 控制台 → Settings → API 找到以下信息</p>
+    <h3>⚙️ 系统配置</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:18px">在 Supabase 控制台 → Settings → API 找到以下信息</p>
     <div class="form-row"><label>Project URL</label><input id="cfgUrl" placeholder="https://xxxx.supabase.co"></div>
     <div class="form-row"><label>Anon Public Key</label><input id="cfgKey" placeholder="eyJh..."></div>
-    <div class="form-row"><label>访问密码（自定义）</label><input id="cfgPw" placeholder="设置家庭访问密码" type="password"></div>
-    <div class="form-row" style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
-      <label>身高 (cm)——用于计算 BMI 和热量预算</label>
+    <div class="form-row"><label>访问密码</label><input id="cfgPw" placeholder="设置家庭访问密码" type="password"></div>
+    <div class="form-row">
+      <label>身高 (cm) — 计算 BMI 和热量预算</label>
       <input id="cfgHeight" type="number" placeholder="例如 170">
     </div>
     <div class="form-row">
-      <label>Claude API Key（用于 AI 分析）</label>
+      <label>Claude API Key（AI 分析）</label>
       <input id="cfgOpenaiKey" placeholder="sk-ant-..." type="password">
-      <p style="font-size:11px;color:var(--muted);margin-top:4px">Key 仅保存在本地浏览器，不上传任何服务器</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:5px">Key 仅保存在本地浏览器，不上传任何服务器</p>
     </div>
     <div class="modal-btns">
       <button class="btn btn-primary" onclick="saveConfig()">保存并连接</button>
@@ -205,129 +204,141 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
 
 <!-- Main app -->
 <div id="app">
-  <header>
-    <h1>🩺 血糖管理系统</h1>
-    <div class="header-right">
-      <span id="connStatus" style="font-size:11px;color:var(--muted)">未连接</span>
-      <button class="icon-btn" onclick="openConfig()">⚙️ 配置</button>
-      <button class="icon-btn" onclick="lock()">🔒 锁定</button>
+  <div class="app-bar">
+    <div class="app-bar-inner">
+      <span class="app-title">血糖管理</span>
+      <div class="bar-actions">
+        <span id="connStatus">未连接</span>
+        <button class="icon-btn" onclick="openConfig()">⚙️</button>
+        <button class="icon-btn" onclick="lock()">🔒</button>
+      </div>
     </div>
-  </header>
-  <nav>
-    <button class="nav-btn active" onclick="showPage('dashboard',this)">总览</button>
-    <button class="nav-btn" onclick="showPage('cgm',this)">CGM 曲线</button>
-    <button class="nav-btn" onclick="showPage('upload',this)">导入 CSV</button>
-    <button class="nav-btn" onclick="showPage('record',this)">日常记录</button>
-    <button class="nav-btn" onclick="showPage('history',this)">历史数据</button>
-    <button class="nav-btn" onclick="showPage('risk',this)">风险应急</button>
-  </nav>
+  </div>
+
   <main>
 
-    <!-- Dashboard -->
+    <!-- TODAY / DASHBOARD -->
     <div id="page-dashboard" class="page active">
 
-      <!-- Hero gradient card -->
-      <div class="dash-hero">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-          <div>
-            <div style="font-size:15px;font-weight:700;letter-spacing:.3px">T2DM 精准管理</div>
-            <div class="d-status" id="d-status-text">血糖数据加载中...</div>
+      <!-- TIR Ring Hero -->
+      <div class="tir-ring-wrap">
+        <div class="tir-ring-container">
+          <svg class="tir-ring-svg" viewBox="0 0 200 200">
+            <defs>
+              <linearGradient id="tirGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#8b5cf6"/>
+                <stop offset="100%" style="stop-color:#34d399"/>
+              </linearGradient>
+            </defs>
+            <circle class="tir-ring-bg" cx="100" cy="100" r="82"/>
+            <circle id="tirRingTrack" class="tir-ring-track" cx="100" cy="100" r="82"
+              stroke="url(#tirGrad)" stroke-dasharray="0 515"/>
+          </svg>
+          <div class="tir-ring-center">
+            <div class="tir-score-num" id="tirScoreNum">--</div>
+            <div class="tir-score-lbl">血糖评分</div>
+            <div class="tir-score-sub" id="tirScoreSub" style="color:var(--muted)">加载中...</div>
           </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <div class="hero-stat"><div class="hero-stat-lbl">空腹血糖</div><div class="hero-stat-val" id="d-fasting" style="color:#86efac">--</div></div>
-            <div class="hero-stat"><div class="hero-stat-lbl">24h 均值</div><div class="hero-stat-val" id="d-avg">--</div></div>
-          </div>
-        </div>
-        <div class="hero-stats">
-          <div class="hero-stat"><div class="hero-stat-lbl">BMI</div><div class="hero-stat-val" id="d-bmi">--</div></div>
-          <div class="hero-stat"><div class="hero-stat-lbl">热量预算</div><div class="hero-stat-val" id="d-kcal" style="font-size:13px">--</div></div>
-          <div class="hero-stat"><div class="hero-stat-lbl">TIR (7天)</div><div class="hero-stat-val" id="d-tir">--%</div></div>
-          <div class="hero-stat"><div class="hero-stat-lbl">体重</div><div class="hero-stat-val" id="d-weight">-- lbs</div></div>
         </div>
       </div>
 
-      <!-- BMI gauge + targets + latest glucose -->
+      <!-- 2×2 metrics -->
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-label">TIR 达标率</div>
+          <div class="metric-val" id="d-tir" style="color:var(--green)">--%</div>
+          <div class="metric-sub">近7天 70–180</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">CGM 均值</div>
+          <div class="metric-val" id="d-avg">--</div>
+          <div class="metric-sub">mg/dL</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">空腹血糖</div>
+          <div class="metric-val" id="d-fasting" style="color:var(--green)">--</div>
+          <div class="metric-sub">目标 70–100</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">体重</div>
+          <div class="metric-val" id="d-weight">--</div>
+          <div class="metric-sub">lbs</div>
+        </div>
+      </div>
+
+      <!-- BMI + HbA1c -->
       <div class="card">
-        <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div class="card-title">身体指标</div>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
           <div class="bmi-wrap">
-            <svg viewBox="0 0 200 120" style="width:180px;height:110px;display:block;margin:0 auto">
-              <!-- Background arc -->
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--border)" stroke-width="14" stroke-linecap="round"/>
-              <!-- Underweight: blue 0–35.2 -->
+            <svg viewBox="0 0 200 120" style="width:170px;height:105px;display:block;margin:0 auto">
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--surface2)" stroke-width="14" stroke-linecap="round"/>
               <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#60a5fa" stroke-width="14" stroke-linecap="round" stroke-dasharray="35.2 251"/>
-              <!-- Normal: green 35.2–100.5 -->
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="65.3 251" stroke-dashoffset="-35.2"/>
-              <!-- Overweight: amber 100.5–150.8 -->
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="50.3 251" stroke-dashoffset="-100.5"/>
-              <!-- Obese: red 150.8–251 -->
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="100.5 251" stroke-dashoffset="-150.8"/>
-              <!-- Needle -->
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#34d399" stroke-width="14" stroke-dasharray="65.3 251" stroke-dashoffset="-35.2"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#fbbf24" stroke-width="14" stroke-dasharray="50.3 251" stroke-dashoffset="-100.5"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f87171" stroke-width="14" stroke-dasharray="100.5 251" stroke-dashoffset="-150.8"/>
               <line id="bmiNeedle" x1="100" y1="100" x2="100" y2="35" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>
               <circle cx="100" cy="100" r="5" fill="var(--text)"/>
-              <!-- Value -->
-              <text id="bmiGaugeVal" x="100" y="84" text-anchor="middle" font-size="20" font-weight="700" fill="#22c55e">--</text>
+              <text id="bmiGaugeVal" x="100" y="84" text-anchor="middle" font-size="20" font-weight="700" fill="#34d399">--</text>
             </svg>
-            <div id="d-bmi-label" style="font-size:12px;color:var(--muted);text-align:center;margin-top:-2px">BMI 分类: --</div>
+            <div id="d-bmi-label" style="font-size:11px;color:var(--muted);text-align:center;margin-top:-2px">BMI 分类: --</div>
           </div>
-          <div style="flex:1;min-width:150px">
+          <div style="flex:1;min-width:120px">
             <div style="margin-bottom:10px">
-              <span class="target-pill">目标: 80–130（空腹）</span>
-              <span class="target-pill">目标: &lt;180（餐后）</span>
+              <span class="target-pill">空腹 80–130</span>
+              <span class="target-pill">餐后 &lt;180</span>
             </div>
-            <div class="metric-label">最新血糖</div>
-            <div class="metric-val" id="d-latest" style="font-size:26px;color:var(--green)">-- <span style="font-size:13px;font-weight:400">mg/dL</span></div>
-            <div class="metric-sub" id="d-latest-time">--</div>
-            <div style="margin-top:10px;display:flex;gap:16px">
-              <div><div class="metric-label">HbA1c</div><div class="metric-val" id="d-hba1c" style="font-size:18px">--%</div><div class="metric-sub">目标 &lt;6%</div></div>
+            <div class="metric-label">BMI</div>
+            <div class="metric-val" id="d-bmi" style="font-size:26px;color:var(--green)">--</div>
+            <div style="margin-top:12px">
+              <div class="metric-label">HbA1c</div>
+              <div class="metric-val" id="d-hba1c" style="font-size:20px">--%</div>
+              <div class="metric-sub">目标 &lt;6%</div>
+            </div>
+            <div style="margin-top:10px">
+              <div class="metric-label">热量预算</div>
+              <div class="metric-val" id="d-kcal" style="font-size:16px;font-weight:600">--</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tabbed section: 血糖趋势 / 膳食计划 / 运动日历 -->
-      <div class="tab-card">
+      <!-- 24h CGM + TIR bar -->
+      <div class="card">
+        <div class="card-title">近24小时 CGM 趋势</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="dashCgmChart"></canvas></div>
+        <div class="tir-bar">
+          <div class="tir-seg" id="tir-low" style="width:3%;background:var(--red)"></div>
+          <div class="tir-seg" id="tir-in" style="width:91%;background:var(--green)"></div>
+          <div class="tir-seg" id="tir-high" style="width:6%;background:var(--amber)"></div>
+        </div>
+        <div class="tir-legend">
+          <span><span class="dot" style="background:var(--red)"></span>低 <span id="leg-low">--%</span></span>
+          <span><span class="dot" style="background:var(--green)"></span>目标范围 <span id="leg-in">--%</span></span>
+          <span><span class="dot" style="background:var(--amber)"></span>高 <span id="leg-high">--%</span></span>
+        </div>
+      </div>
+
+      <!-- Meal / Exercise tabs -->
+      <div class="card">
         <div class="tab-row">
-          <span class="tab active" onclick="showDashTab('trend',this)">血糖趋势</span>
-          <span class="tab" onclick="showDashTab('meal',this)">膳食计划</span>
+          <span class="tab active" onclick="showDashTab('meal',this)">膳食计划</span>
           <span class="tab" onclick="showDashTab('exercise',this)">运动日历</span>
         </div>
-
-        <!-- 血糖趋势 -->
-        <div id="dash-tab-trend" class="dash-tab active">
-          <div style="margin-bottom:14px">
-            <div class="card-title">近7天 TIR 分布</div>
-            <div class="tir-bar">
-              <div class="tir-seg" id="tir-low" style="width:3%;background:#ef4444">低</div>
-              <div class="tir-seg" id="tir-in" style="width:91%;background:#22c55e">91%</div>
-              <div class="tir-seg" id="tir-high" style="width:6%;background:#f59e0b">高</div>
-            </div>
-            <div class="tir-legend">
-              <span><span class="dot" style="background:#ef4444"></span>低血糖 &lt;70: <span id="leg-low">3%</span></span>
-              <span><span class="dot" style="background:#22c55e"></span>目标范围 70–180: <span id="leg-in">91%</span></span>
-              <span><span class="dot" style="background:#f59e0b"></span>高血糖 &gt;180: <span id="leg-high">6%</span></span>
-            </div>
-          </div>
-          <div class="card-title">近24小时 CGM 趋势</div>
-          <div class="chart-wrap" style="height:200px"><canvas id="dashCgmChart"></canvas></div>
-        </div>
-
-        <!-- 膳食计划 -->
-        <div id="dash-tab-meal" class="dash-tab">
+        <div id="dash-tab-meal" class="dash-tab active">
           <div class="card-title" id="mealPlanTitle">个性化膳食建议</div>
-          <p style="font-size:11px;color:var(--muted);margin-bottom:12px">根据体重计算热量需求，T2DM 低升糖指数饮食方案</p>
-          <div class="chart-wrap" style="height:230px"><canvas id="mealChart"></canvas></div>
-          <div class="meal-list" id="mealPlanList" style="margin-top:12px"></div>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:12px">低升糖指数饮食方案，根据体重计算热量</p>
+          <div class="chart-wrap" style="height:200px"><canvas id="mealChart"></canvas></div>
+          <div class="meal-list" id="mealPlanList" style="margin-top:10px"></div>
         </div>
-
-        <!-- 运动日历 -->
         <div id="dash-tab-exercise" class="dash-tab">
           <div class="card-title">每周运动日历 (Zone 2)</div>
-          <p style="font-size:11px;color:var(--muted);margin-bottom:12px">中等强度有氧，心率维持在最大心率 60–70%</p>
-          <div class="chart-wrap" style="height:220px"><canvas id="exerciseChart"></canvas></div>
-          <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted)">
-            <span><span style="display:inline-block;width:10px;height:10px;background:#22c55e;border-radius:2px;margin-right:4px;vertical-align:middle"></span>已完成</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:#6366f1;border-radius:2px;margin-right:4px;vertical-align:middle"></span>计划中</span>
-            <span><span style="display:inline-block;width:10px;height:10px;background:var(--border);border-radius:2px;margin-right:4px;vertical-align:middle"></span>休息日</span>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:12px">中等强度有氧，心率 60–70% 最大心率</p>
+          <div class="chart-wrap" style="height:200px"><canvas id="exerciseChart"></canvas></div>
+          <div style="display:flex;gap:14px;margin-top:10px;font-size:10px;color:var(--muted)">
+            <span><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:2px;margin-right:4px;vertical-align:middle"></span>已完成</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:var(--accent);border-radius:2px;margin-right:4px;vertical-align:middle"></span>计划中</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:var(--surface2);border:1px solid var(--border);border-radius:2px;margin-right:4px;vertical-align:middle"></span>休息日</span>
           </div>
         </div>
       </div>
@@ -340,51 +351,97 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
       </div>
     </div>
 
-    <!-- CGM page -->
+    <!-- CGM PAGE -->
     <div id="page-cgm" class="page">
+      <div class="section-header">CGM 曲线</div>
+      <div class="section-sub">连续血糖监测 <span id="cgmYearBadge" style="font-size:11px;color:var(--accent);background:rgba(139,92,246,.12);border-radius:6px;padding:2px 8px;margin-left:4px"></span></div>
       <div class="card">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <span>CGM 血糖曲线 <span id="cgmYearBadge" style="font-size:11px;font-weight:400;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:middle"></span></span>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <select id="cgmQuick" onchange="applyQuickRange()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
-              <option value="">自定义</option>
-              <option value="1">今日</option>
-              <option value="3">近3天</option>
-              <option value="7">近7天</option>
-              <option value="14">近14天</option>
-              <option value="30">近30天</option>
-              <option value="all">全部数据</option>
-            </select>
-            <input type="date" id="cgmFrom" onchange="renderCgmChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
-            <span style="font-size:12px;color:var(--muted)">至</span>
-            <input type="date" id="cgmTo" onchange="renderCgmChart()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
-          </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          <select id="cgmQuick" onchange="applyQuickRange()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);flex:1;min-width:90px">
+            <option value="">自定义范围</option>
+            <option value="1">今日</option>
+            <option value="3">近3天</option>
+            <option value="7">近7天</option>
+            <option value="14">近14天</option>
+            <option value="30">近30天</option>
+            <option value="all">全部数据</option>
+          </select>
+          <input type="date" id="cgmFrom" onchange="renderCgmChart()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text)">
+          <span style="font-size:12px;color:var(--muted)">至</span>
+          <input type="date" id="cgmTo" onchange="renderCgmChart()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text)">
         </div>
-        <div class="metric-grid" style="margin-bottom:12px">
+        <div class="metric-grid" style="margin-bottom:14px">
           <div class="metric-card"><div class="metric-label">均值</div><div class="metric-val" id="cgm-avg">--</div></div>
-          <div class="metric-card"><div class="metric-label">最高</div><div class="metric-val" id="cgm-max" style="color:#f59e0b">--</div></div>
-          <div class="metric-card"><div class="metric-label">最低</div><div class="metric-val" id="cgm-min" style="color:#3b82f6">--</div></div>
+          <div class="metric-card"><div class="metric-label">最高</div><div class="metric-val" id="cgm-max" style="color:var(--amber)">--</div></div>
+          <div class="metric-card"><div class="metric-label">最低</div><div class="metric-val" id="cgm-min" style="color:var(--blue)">--</div></div>
           <div class="metric-card"><div class="metric-label">标准差</div><div class="metric-val" id="cgm-sd">--</div></div>
         </div>
-        <div class="chart-wrap" style="height:260px"><canvas id="cgmChart"></canvas></div>
+        <div class="chart-wrap" style="height:250px"><canvas id="cgmChart"></canvas></div>
       </div>
-
       <div class="card">
-        <div class="card-title">每日血糖模式（平均值按小时）</div>
-        <div class="chart-wrap" style="height:200px"><canvas id="agpChart"></canvas></div>
+        <div class="card-title">每日血糖模式（按小时均值）</div>
+        <div class="chart-wrap" style="height:190px"><canvas id="agpChart"></canvas></div>
       </div>
     </div>
 
-    <!-- Upload page -->
-    <div id="page-upload" class="page">
-      <div class="range-tip">
-        📋 <strong>Libre 3 CSV 导出步骤：</strong><br>
-        LibreView 网站 → 报告 → 导出数据 → 选择日期范围 → 下载 CSV<br>
-        或 Abbott LibreLink App → 连接 → LibreView → 导出
+    <!-- RECORD PAGE -->
+    <div id="page-record" class="page">
+      <div class="section-header">日常记录</div>
+      <div class="section-sub">记录今日血糖、血压、体重等数据</div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="field"><label>日期</label><input type="date" id="r-date"></div>
+          <div class="field"><label>空腹血糖 (mg/dL)</label><input type="number" id="r-fasting" placeholder="目标 70–100"></div>
+          <div class="field"><label>餐后血糖 (mg/dL)</label><input type="number" id="r-postmeal" placeholder="目标 &lt;180"></div>
+          <div class="field"><label>收缩压 (mmHg)</label><input type="number" id="r-sbp" placeholder="目标 &lt;120"></div>
+          <div class="field"><label>舒张压 (mmHg)</label><input type="number" id="r-dbp" placeholder="目标 &lt;80"></div>
+          <div class="field"><label>体重 (lbs)</label><input type="number" id="r-weight" step="0.1" placeholder="180"></div>
+          <div class="field"><label>HbA1c %（门诊时填）</label><input type="number" id="r-hba1c" step="0.1" placeholder="&lt;6%"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label>备注</label><textarea id="r-notes" placeholder="饮食、运动、用药等情况..."></textarea></div>
+        <div style="margin-top:14px;display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="saveRecord()">保存记录</button>
+          <button class="btn" onclick="clearRecordForm()">清空</button>
+        </div>
+        <p id="recordMsg" style="font-size:12px;margin-top:8px;min-height:18px"></p>
       </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="page-history" class="page">
+      <div class="section-header">历史数据</div>
+      <div class="section-sub">近期趋势与每日记录</div>
+      <div class="card">
+        <div class="tab-row">
+          <span class="tab active" onclick="showHistTab('glucose',this)">血糖</span>
+          <span class="tab" onclick="showHistTab('bp',this)">血压</span>
+          <span class="tab" onclick="showHistTab('weight',this)">体重</span>
+        </div>
+        <div class="chart-wrap" style="height:210px"><canvas id="histChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title" style="margin-bottom:0">每日记录</div>
+          <button class="btn" onclick="exportCSV()" style="font-size:11px;padding:5px 12px">导出 CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th>日期</th><th>空腹</th><th>餐后</th><th>血压</th><th>体重</th><th>HbA1c</th><th>状态</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+        <p id="histMsg" style="font-size:12px;color:var(--muted);margin-top:8px"></p>
+      </div>
+    </div>
+
+    <!-- MORE PAGE -->
+    <div id="page-more" class="page">
+      <div class="section-header">更多</div>
+      <div class="section-sub">数据导入、风险指南与系统设置</div>
 
       <div class="card">
-        <div class="card-title">上传 Libre 3 CSV 文件</div>
+        <div class="card-title">导入 CGM 数据</div>
+        <div class="range-tip">📋 <strong>Libre 3 CSV 导出：</strong> LibreView → 报告 → 导出数据 → 选择日期 → 下载 CSV</div>
         <div class="upload-zone" id="dropZone" onclick="document.getElementById('csvFile').click()"
           ondragover="event.preventDefault();this.classList.add('drag')"
           ondragleave="this.classList.remove('drag')"
@@ -394,7 +451,6 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
           <p><strong>点击选择</strong> 或拖拽 CSV 文件到此处</p>
           <p style="margin-top:4px;font-size:11px">支持 LibreView / LibreLink 导出的标准 CSV 格式</p>
         </div>
-
         <div id="parseResult" style="display:none;margin-top:14px">
           <div class="row"><span style="font-size:13px">解析记录数</span><span id="parseCount" class="badge b-blue">0 条</span></div>
           <div class="row"><span style="font-size:13px">日期范围</span><span id="parseDateRange" style="font-size:12px;color:var(--muted)">--</span></div>
@@ -404,107 +460,46 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
             <button class="btn" onclick="resetUpload()">重新选择</button>
           </div>
         </div>
-
         <div id="uploadProgress" style="display:none;margin-top:14px">
           <div style="font-size:13px;color:var(--muted);margin-bottom:6px" id="uploadMsg">正在上传...</div>
-          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-            <div id="uploadBar" style="height:100%;background:#3b82f6;border-radius:3px;width:0%;transition:width .3s"></div>
+          <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+            <div id="uploadBar" style="height:100%;background:var(--accent);border-radius:3px;width:0%;transition:width .3s"></div>
           </div>
         </div>
       </div>
 
       <div class="card" id="previewCard" style="display:none">
         <div class="card-title">数据预览（前20条）</div>
-        <div style="overflow-x:auto">
-          <table class="tbl" id="previewTable"></table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Record page -->
-    <div id="page-record" class="page">
-      <div class="card">
-        <div class="card-title">今日记录</div>
-        <div class="form-grid">
-          <div class="field"><label>日期</label><input type="date" id="r-date"></div>
-          <div class="field"><label>空腹血糖 (mg/dL)</label><input type="number" id="r-fasting" placeholder="目标 70–100"></div>
-          <div class="field"><label>餐后血糖 (mg/dL)</label><input type="number" id="r-postmeal" placeholder="目标 <180"></div>
-          <div class="field"><label>收缩压 (mmHg)</label><input type="number" id="r-sbp" placeholder="目标 <120"></div>
-          <div class="field"><label>舒张压 (mmHg)</label><input type="number" id="r-dbp" placeholder="目标 <80"></div>
-          <div class="field"><label>体重 (lbs)</label><input type="number" id="r-weight" step="0.1" placeholder="180"></div>
-          <div class="field"><label>HbA1c % (门诊时填)</label><input type="number" id="r-hba1c" step="0.1" placeholder="<6%"></div>
-        </div>
-        <div class="field" style="margin-top:10px"><label>备注</label><textarea id="r-notes" placeholder="饮食、运动、用药等情况..."></textarea></div>
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="saveRecord()">保存记录</button>
-          <button class="btn" onclick="clearRecordForm()">清空</button>
-        </div>
-        <p id="recordMsg" style="font-size:12px;margin-top:8px;min-height:18px"></p>
-      </div>
-    </div>
-
-    <!-- History page -->
-    <div id="page-history" class="page">
-      <div class="card">
-        <div class="card-title">历史趋势</div>
-        <div class="tab-row">
-          <span class="tab active" onclick="showHistTab('glucose',this)">血糖趋势</span>
-          <span class="tab" onclick="showHistTab('bp',this)">血压</span>
-          <span class="tab" onclick="showHistTab('weight',this)">体重</span>
-        </div>
-        <div class="chart-wrap" style="height:220px"><canvas id="histChart"></canvas></div>
+        <div style="overflow-x:auto"><table class="tbl" id="previewTable"></table></div>
       </div>
 
-      <div class="card">
-        <div class="card-title" style="display:flex;justify-content:space-between">
-          <span>每日记录表</span>
-          <button class="btn" onclick="exportCSV()" style="font-size:11px;padding:4px 10px">导出 CSV</button>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="tbl">
-            <thead><tr>
-              <th>日期</th><th>空腹血糖</th><th>餐后血糖</th><th>血压</th><th>体重</th><th>HbA1c</th><th>状态</th>
-            </tr></thead>
-            <tbody id="historyBody"></tbody>
-          </table>
-        </div>
-        <p id="histMsg" style="font-size:12px;color:var(--muted);margin-top:8px"></p>
-      </div>
-    </div>
-
-    <!-- Risk page -->
-    <div id="page-risk" class="page">
-      <div class="card" style="border-color:var(--red-b);background:var(--red-bg)">
+      <div class="risk-card danger">
         <div class="card-title" style="color:var(--red)">🚨 低血糖应急 — 15/15 原则</div>
-        <div style="font-size:13px;line-height:2;color:var(--red)">
-          <strong>识别信号：</strong>心慌、手抖、出冷汗、强烈饥饿感、头晕、CGM报警 &lt;70<br>
-          <strong>Step 1：</strong>立即补充 <strong>15克</strong>快速碳水<br>
-          &nbsp;&nbsp;&nbsp;• 4粒葡萄糖片 / 半杯果汁 4oz / 1汤匙蜂蜜<br>
-          <strong>Step 2：</strong>等待 <strong>15分钟</strong>后复测<br>
+        <div style="font-size:13px;line-height:2;color:rgba(248,113,113,.9)">
+          <strong>识别：</strong>心慌、手抖、出冷汗、饥饿感、CGM 报警 &lt;70<br>
+          <strong>Step 1：</strong>立即补充 15g 快速碳水（4粒葡萄糖片 / 半杯果汁 / 1汤匙蜂蜜）<br>
+          <strong>Step 2：</strong>等待 15分钟后复测<br>
           <strong>Step 3：</strong>仍 &lt;70 则重复 Step 1–2<br>
-          <strong>Step 4：</strong>恢复正常后补充少量蛋白质零食
+          <strong>Step 4：</strong>恢复后补充少量蛋白质零食
         </div>
       </div>
 
-      <div class="card" style="border-color:var(--amber-b)">
+      <div class="risk-card warn">
         <div class="card-title" style="color:var(--amber)">⚠️ 高血糖持续 (&gt;250 mg/dL)</div>
-        <div style="font-size:13px;line-height:1.9;color:var(--amber)">
-          <strong>信号：</strong>口干、多尿、极度疲乏，CGM长时间 &gt;250<br>
-          <strong>处理：</strong>大量补水 → 检查用药是否遗漏 → 伴恶心/呕吐立即就医<br>
+        <div style="font-size:13px;line-height:1.9;color:rgba(251,191,36,.9)">
+          <strong>信号：</strong>口干、多尿、极度疲乏<br>
+          <strong>处理：</strong>大量补水 → 检查用药是否遗漏 → 伴恶心呕吐立即就医<br>
           <strong>警惕：</strong>酮症酸中毒 (DKA) — 速至急诊
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">👣 足部损伤</div>
-        <div style="font-size:13px;line-height:1.9;color:var(--muted)">
-          <strong style="color:var(--text)">日常：</strong>每日洗脚后仔细擦干（特别是趾缝），避免赤脚行走<br>
-          <strong style="color:var(--text)">发现破损：</strong>切勿自行处理，立即就诊足踝医生或专业护士
-        </div>
+        <div class="card-title">👣 足部护理</div>
+        <div style="font-size:13px;line-height:1.9;color:var(--muted)">每日洗脚后仔细擦干（尤其趾缝），避免赤脚行走。发现破损立即就诊足踝医生。</div>
       </div>
 
       <div class="card">
-        <div class="card-title">📋 CGM 报警设置标准</div>
+        <div class="card-title">📋 CGM 报警设置</div>
         <div class="row"><span>低血糖报警</span><span class="badge b-red">70 mg/dL</span></div>
         <div class="row"><span>高血糖报警</span><span class="badge b-amber">180 mg/dL</span></div>
         <div class="row"><span>紧急低血糖报警</span><span class="badge b-red">55 mg/dL</span></div>
@@ -515,9 +510,38 @@ nav{background:linear-gradient(135deg,#1e1b4b,#2e27a0);border-bottom:none;paddin
         <div class="row"><span>急救</span><span style="font-weight:700;color:var(--red)">911</span></div>
         <div class="row"><span>主治医生</span><span style="font-size:12px;color:var(--muted)">请在配置中填写</span></div>
       </div>
+
+      <div class="card" style="text-align:center">
+        <div class="card-title">系统设置</div>
+        <button class="btn btn-primary" onclick="openConfig()" style="width:100%">⚙️ 打开配置</button>
+      </div>
     </div>
 
   </main>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active" onclick="showPage('dashboard',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      今日
+    </button>
+    <button class="nav-tab" onclick="showPage('cgm',this)">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      CGM
+    </button>
+    <button class="nav-tab" onclick="showPage('record',this)">
+      <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      记录
+    </button>
+    <button class="nav-tab" onclick="showPage('history',this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      历史
+    </button>
+    <button class="nav-tab" onclick="showPage('more',this)">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/></svg>
+      更多
+    </button>
+  </nav>
 </div>
 
 <div id="statusBar"></div>
@@ -550,7 +574,7 @@ function unlock() {
   document.getElementById('app').style.display = 'block';
   initSupabase();
   setTodayDate();
-  setTimeout(loadAllData, 300); // slight delay to ensure sb client is ready
+  setTimeout(loadAllData, 300);
 }
 
 function lock() {
@@ -608,7 +632,7 @@ function initSupabase() {
 // ---- Navigation ----
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if (btn) btn.classList.add('active');
   if (id === 'cgm') renderCgmChart();
@@ -618,7 +642,6 @@ function showPage(id, btn) {
 // ---- Load data ----
 async function loadAllData() {
   if (!sb) return;
-  // Load CGM with no date restriction first, then render
   await Promise.all([loadCgmData(null, null), loadDailyRecords()]);
   renderDashboard();
 }
@@ -644,8 +667,22 @@ async function loadDailyRecords() {
 function showDashTab(id, el) {
   document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('dash-tab-' + id).classList.add('active');
-  document.querySelectorAll('.tab-card .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-dashboard .tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+}
+
+// ---- TIR Ring ----
+function renderTirRing(tirPct) {
+  const circ = 2 * Math.PI * 82; // r=82 → ~515.2
+  const dash = (tirPct / 100) * circ;
+  const gap = circ - dash;
+  document.getElementById('tirRingTrack').setAttribute('stroke-dasharray', `${dash.toFixed(1)} ${gap.toFixed(1)}`);
+  const score = Math.min(100, Math.round(tirPct * 0.85 + (tirPct >= 70 ? 15 : tirPct / 70 * 15)));
+  document.getElementById('tirScoreNum').textContent = score;
+  const sub = tirPct >= 90 ? '血糖控制优秀 ✓' : tirPct >= 70 ? '血糖控制良好' : '需要关注血糖';
+  const col = tirPct >= 90 ? 'var(--green)' : tirPct >= 70 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('tirScoreSub').textContent = sub;
+  document.getElementById('tirScoreSub').style.color = col;
 }
 
 // ---- BMI Gauge ----
@@ -660,26 +697,27 @@ function renderBmiGauge(bmi) {
   const val = Math.round(bmi * 10) / 10;
   document.getElementById('bmiGaugeVal').textContent = val;
   const label = bmi < 18.5 ? '偏瘦' : bmi < 25 ? '正常' : bmi < 30 ? '超重' : '肥胖';
-  const color = bmi < 18.5 ? '#60a5fa' : bmi < 25 ? '#22c55e' : bmi < 30 ? '#f59e0b' : '#ef4444';
-  document.getElementById('bmiGaugeVal').setAttribute('fill', color);
+  const hexColor = bmi < 18.5 ? '#60a5fa' : bmi < 25 ? '#34d399' : bmi < 30 ? '#fbbf24' : '#f87171';
+  const varColor = bmi < 18.5 ? 'var(--blue)' : bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('bmiGaugeVal').setAttribute('fill', hexColor);
   document.getElementById('d-bmi-label').textContent = 'BMI 分类: ' + label;
-  document.getElementById('d-bmi-label').style.color = color;
+  document.getElementById('d-bmi-label').style.color = varColor;
   document.getElementById('d-bmi').textContent = val;
-  document.getElementById('d-bmi').style.color = color;
+  document.getElementById('d-bmi').style.color = varColor;
 }
 
 // ---- Meal Plan Chart ----
 function renderMealChart(totalKcal) {
   const dayIdx = new Date().getDay();
   const mealDefs = [
-    { name:'早餐', pct:.18, opts:['燕麦 + 煮鸡蛋 + 无糖豆浆','全麦吐司 + 牛油果 + 酸奶','小米粥 + 卤蛋 + 蒸时蔬'] },
-    { name:'上午点心', pct:.10, opts:['一把坚果 (15g)','小苹果 + 低脂奶酪','黄瓜 + 鹰嘴豆泥'] },
-    { name:'午餐', pct:.32, opts:['鸡胸肉 + 糙米 + 西蓝花','三文鱼 + 藜麦沙拉','豆腐炒蔬菜 + 糙米饭'] },
-    { name:'下午点心', pct:.10, opts:['希腊酸奶 + 蓝莓','高纤饼干 + 奶酪','煮毛豆 100g'] },
-    { name:'晚餐', pct:.30, opts:['清蒸鱼 + 时蔬 + 藜麦','鸡肉蔬菜汤 + 全麦馒头','虾仁炒芦笋 + 杂粮饭'] }
+    { name:'早餐', pct:.18, opts:['燕麦+煮鸡蛋+无糖豆浆','全麦吐司+牛油果+酸奶','小米粥+卤蛋+蒸时蔬'] },
+    { name:'上午点心', pct:.10, opts:['坚果15g','小苹果+低脂奶酪','黄瓜+鹰嘴豆泥'] },
+    { name:'午餐', pct:.32, opts:['鸡胸肉+糙米+西蓝花','三文鱼+藜麦沙拉','豆腐炒蔬菜+糙米饭'] },
+    { name:'下午点心', pct:.10, opts:['希腊酸奶+蓝莓','高纤饼干+奶酪','煮毛豆100g'] },
+    { name:'晚餐', pct:.30, opts:['清蒸鱼+时蔬+藜麦','鸡肉蔬菜汤+全麦馒头','虾仁炒芦笋+杂粮饭'] }
   ];
   const kcals = mealDefs.map(m => Math.round(totalKcal * m.pct));
-  document.getElementById('mealPlanTitle').textContent = totalKcal + ' kcal 个性化膳食建议';
+  document.getElementById('mealPlanTitle').textContent = totalKcal + ' kcal 个性化膳食方案';
   document.getElementById('mealPlanList').innerHTML = mealDefs.map((m,i) =>
     `<div><strong>${m.name}</strong>：${m.opts[dayIdx % 3]} — ${kcals[i]} kcal</div>`
   ).join('');
@@ -688,22 +726,16 @@ function renderMealChart(totalKcal) {
     type:'bar',
     data:{
       labels: mealDefs.map(m => m.name),
-      datasets:[{
-        label:'卡路里',
-        data: kcals,
-        backgroundColor:['#3b82f6','#8b5cf6','#3b82f6','#8b5cf6','#3b82f6'],
-        borderRadius:8, barPercentage:.65
-      }]
+      datasets:[{ label:'卡路里', data: kcals,
+        backgroundColor:['rgba(139,92,246,.7)','rgba(52,211,153,.7)','rgba(139,92,246,.7)','rgba(52,211,153,.7)','rgba(139,92,246,.7)'],
+        borderRadius:8, barPercentage:.65 }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{afterLabel: ctx => mealDefs[ctx.dataIndex].opts[dayIdx%3]}}
-      },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{afterLabel: ctx => mealDefs[ctx.dataIndex].opts[dayIdx%3]}} },
       scales:{
-        y:{ticks:{font:{size:10},callback:v=>v+'kcal'},grid:{color:'rgba(0,0,0,.05)'}},
-        x:{ticks:{font:{size:11}}}
+        y:{ticks:{font:{size:10},color:'#7b8299',callback:v=>v+''},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'#7b8299'},grid:{display:false}}
       }
     }
   });
@@ -711,49 +743,28 @@ function renderMealChart(totalKcal) {
 
 // ---- Exercise Plan Chart ----
 function renderExerciseChart() {
-  const today = new Date();
-  const todayDow = today.getDay(); // 0=Sun
-  const exerciseDays = new Set([1,2,4,5,6]); // Mon Tue Thu Fri Sat
-  const weekOrder = [1,2,3,4,5,6,0]; // Mon→Sun
-  const dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
+  const todayDow = new Date().getDay();
+  const exerciseDays = new Set([1,2,4,5,6]);
+  const weekOrder = [1,2,3,4,5,6,0];
+  const dayNames = ['日','一','二','三','四','五','六'];
   const durations = weekOrder.map(d => exerciseDays.has(d) ? 45 : 0);
   const colors = weekOrder.map(d => {
-    if (!exerciseDays.has(d)) return 'rgba(156,163,175,.3)'; // rest
-    const diff = (todayDow - d + 7) % 7;
-    if (diff > 0) return '#22c55e'; // past = completed
-    return '#6366f1'; // today/future = planned
-  });
-  const statuses = weekOrder.map(d => {
-    if (!exerciseDays.has(d)) return '休息日';
-    const diff = (todayDow - d + 7) % 7;
-    return diff > 0 ? '已完成' : '计划中';
+    if (!exerciseDays.has(d)) return 'rgba(255,255,255,.06)';
+    return (todayDow - d + 7) % 7 > 0 ? 'rgba(52,211,153,.7)' : 'rgba(139,92,246,.7)';
   });
   if (exerciseChart) exerciseChart.destroy();
   exerciseChart = new Chart(document.getElementById('exerciseChart'), {
     type:'bar',
     data:{
-      labels: weekOrder.map(d => dayNames[d]),
-      datasets:[{
-        data: durations.map(d => d || 8), // show tiny bar for rest
-        backgroundColor: colors,
-        borderRadius:8, barPercentage:.65
-      }]
+      labels: weekOrder.map(d => '周'+dayNames[d]),
+      datasets:[{ data: durations.map(d => d || 8), backgroundColor: colors, borderRadius:8, barPercentage:.65 }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{
-          label: ctx => {
-            const d = weekOrder[ctx.dataIndex];
-            if (!exerciseDays.has(d)) return '休息日';
-            return `${statuses[ctx.dataIndex]} — Zone 2 有氧 45 分钟`;
-          }
-        }}
-      },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{ label: ctx => exerciseDays.has(weekOrder[ctx.dataIndex]) ? 'Zone 2 有氧 45 分钟' : '休息日' }} },
       scales:{
-        y:{max:60,ticks:{font:{size:10},callback:v=>v?v+'分钟':''},grid:{color:'rgba(0,0,0,.05)'}},
-        x:{ticks:{font:{size:12}}}
+        y:{max:60,ticks:{font:{size:10},color:'#7b8299',callback:v=>v?v+'分':''},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        x:{ticks:{font:{size:11},color:'#7b8299'},grid:{display:false}}
       }
     }
   });
@@ -761,40 +772,29 @@ function renderExerciseChart() {
 
 // ---- Dashboard ----
 function renderDashboard() {
-  // CGM data
   if (cgmData.length) {
-    const last = cgmData[cgmData.length - 1];
-    const val = Math.round(last.glucose_mg_dl);
-    document.getElementById('d-latest').innerHTML = `${val} <span style="font-size:13px;font-weight:400">mg/dL</span>`;
-    document.getElementById('d-latest').style.color = val < 70 ? 'var(--red)' : val > 180 ? '#f59e0b' : 'var(--green)';
-    document.getElementById('d-latest-time').textContent = new Date(last.device_timestamp).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-
     const week = cgmData.filter(d => new Date(d.device_timestamp) >= new Date(Date.now() - 7*86400000));
     if (week.length) {
       const vals = week.map(d => d.glucose_mg_dl);
       const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
-      const low = vals.filter(v=>v<70).length, high = vals.filter(v=>v>180).length;
+      const low = vals.filter(v=>v<70).length;
+      const high = vals.filter(v=>v>180).length;
       const inRange = vals.length - low - high;
       const tirPct = Math.round(inRange/vals.length*100);
       const lowPct = Math.round(low/vals.length*100);
       const highPct = 100-tirPct-lowPct;
       document.getElementById('d-tir').textContent = tirPct+'%';
-      document.getElementById('d-tir').style.color = tirPct>=90?'#86efac':tirPct>=70?'#fde68a':'#fca5a5';
+      document.getElementById('d-tir').style.color = tirPct>=90?'var(--green)':tirPct>=70?'var(--amber)':'var(--red)';
       document.getElementById('d-avg').textContent = avg;
       document.getElementById('tir-low').style.width = lowPct+'%';
       document.getElementById('tir-in').style.width = tirPct+'%';
       document.getElementById('tir-high').style.width = highPct+'%';
-      document.getElementById('tir-in').textContent = tirPct>8?tirPct+'%':'';
       document.getElementById('leg-low').textContent = lowPct+'%';
       document.getElementById('leg-in').textContent = tirPct+'%';
       document.getElementById('leg-high').textContent = highPct+'%';
-
-      const statusEl = document.getElementById('d-status-text');
-      statusEl.textContent = tirPct >= 90 ? '血糖控制良好，TIR 达标 ✓' :
-        tirPct >= 70 ? '血糖波动轻度偏高，建议关注饮食' : '血糖控制欠佳，请及时联系医生';
+      renderTirRing(tirPct);
     }
 
-    // 24h chart
     const h24 = cgmData.filter(d => new Date(d.device_timestamp) >= new Date(Date.now()-86400000));
     if (dashChart) dashChart.destroy();
     dashChart = new Chart(document.getElementById('dashCgmChart'), {
@@ -802,32 +802,36 @@ function renderDashboard() {
       data:{
         labels: h24.map(d=>new Date(d.device_timestamp).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})),
         datasets:[
-          {label:'血糖',data:h24.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,.09)',tension:.4,pointRadius:0,borderWidth:2,fill:true},
-          {label:'低',data:Array(h24.length).fill(70),borderColor:'#ef4444',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
-          {label:'高',data:Array(h24.length).fill(180),borderColor:'#f59e0b',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
+          {label:'血糖',data:h24.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.08)',tension:.4,pointRadius:0,borderWidth:2,fill:true},
+          {label:'低',data:Array(h24.length).fill(70),borderColor:'rgba(248,113,113,.5)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
+          {label:'高',data:Array(h24.length).fill(180),borderColor:'rgba(251,191,36,.5)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
         ]
       },
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:60,max:220,ticks:{font:{size:10}}},x:{ticks:{maxTicksLimit:6,font:{size:10}}}}}
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          y:{min:60,max:220,ticks:{font:{size:10},color:'#7b8299'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+          x:{ticks:{maxTicksLimit:6,font:{size:10},color:'#7b8299'},grid:{display:false}}
+        }
+      }
     });
   }
 
-  // Daily records
   let weightLbs = null, totalKcal = 1800;
   if (dailyRecords.length) {
     const today = dailyRecords[0];
     if (today.fasting_glucose) document.getElementById('d-fasting').textContent = today.fasting_glucose;
     if (today.weight_lbs) {
       weightLbs = today.weight_lbs;
-      document.getElementById('d-weight').textContent = today.weight_lbs + ' lbs';
+      document.getElementById('d-weight').textContent = today.weight_lbs;
     }
     const rec = dailyRecords.find(r=>r.hba1c);
     if (rec) {
       document.getElementById('d-hba1c').textContent = rec.hba1c+'%';
-      document.getElementById('d-hba1c').style.color = rec.hba1c<6?'var(--green)':rec.hba1c<7?'#f59e0b':'var(--red)';
+      document.getElementById('d-hba1c').style.color = rec.hba1c<6?'var(--green)':rec.hba1c<7?'var(--amber)':'var(--red)';
     }
   }
 
-  // BMI + calorie budget
   const heightCm = parseFloat(localStorage.getItem(HEIGHT_KEY));
   if (weightLbs && heightCm) {
     const kg = weightLbs / 2.205;
@@ -840,7 +844,6 @@ function renderDashboard() {
     document.getElementById('d-kcal').textContent = '请配置身高';
   }
 
-  // Render meal & exercise charts
   renderMealChart(totalKcal);
   renderExerciseChart();
 }
@@ -849,14 +852,13 @@ function renderDashboard() {
 function applyQuickRange() {
   const val = document.getElementById('cgmQuick').value;
   if (!val) return;
-  const to = new Date();
   if (val === 'all') {
     document.getElementById('cgmFrom').value = '';
     document.getElementById('cgmTo').value = '';
   } else {
     const from = new Date(Date.now() - parseInt(val) * 86400000);
     document.getElementById('cgmFrom').value = from.toISOString().slice(0,10);
-    document.getElementById('cgmTo').value = to.toISOString().slice(0,10);
+    document.getElementById('cgmTo').value = new Date().toISOString().slice(0,10);
   }
   renderCgmChart();
 }
@@ -866,7 +868,6 @@ async function renderCgmChart() {
   const fromVal = document.getElementById('cgmFrom').value;
   const toVal   = document.getElementById('cgmTo').value;
 
-  // Fetch the data for the selected range directly from Supabase
   let query = sb.from('cgm_readings')
     .select('device_timestamp,glucose_mg_dl')
     .not('glucose_mg_dl', 'is', null)
@@ -878,10 +879,8 @@ async function renderCgmChart() {
   if (error || !data || !data.length) return;
   const filtered = data;
 
-  // Show year range in badge
   const years = [...new Set(filtered.map(d=>new Date(d.device_timestamp).getFullYear()))].sort();
-  const yearText = years.length === 1 ? `${years[0]}年` : `${years[0]}–${years[years.length-1]}年`;
-  document.getElementById('cgmYearBadge').textContent = yearText;
+  document.getElementById('cgmYearBadge').textContent = years.length === 1 ? `${years[0]}年` : `${years[0]}–${years[years.length-1]}年`;
 
   const vals = filtered.map(d=>Math.round(d.glucose_mg_dl));
   const avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
@@ -891,7 +890,6 @@ async function renderCgmChart() {
   document.getElementById('cgm-min').textContent = Math.min(...vals);
   document.getElementById('cgm-sd').textContent = sd;
 
-  // Downsample for rendering
   const step = Math.max(1, Math.floor(filtered.length/300));
   const ds = filtered.filter((_,i)=>i%step===0);
 
@@ -901,15 +899,20 @@ async function renderCgmChart() {
     data:{
       labels: ds.map(d=>new Date(d.device_timestamp).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})),
       datasets:[
-        {label:'血糖',data:ds.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.06)',tension:.3,pointRadius:0,borderWidth:1.5,fill:true},
-        {label:'低',data:Array(ds.length).fill(70),borderColor:'#ef4444',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
-        {label:'高',data:Array(ds.length).fill(180),borderColor:'#f59e0b',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
+        {label:'血糖',data:ds.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,.06)',tension:.3,pointRadius:0,borderWidth:1.5,fill:true},
+        {label:'低',data:Array(ds.length).fill(70),borderColor:'rgba(248,113,113,.5)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
+        {label:'高',data:Array(ds.length).fill(180),borderColor:'rgba(251,191,36,.5)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
       ]
     },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:60,max:250,ticks:{font:{size:10}}},x:{ticks:{maxTicksLimit:8,font:{size:10}}}}}
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{min:60,max:250,ticks:{font:{size:10},color:'#7b8299'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        x:{ticks:{maxTicksLimit:8,font:{size:10},color:'#7b8299'},grid:{display:false}}
+      }
+    }
   });
 
-  // AGP hourly average
   const hourly = Array.from({length:24},(_,h)=>{
     const pts = cgmData.filter(d=>new Date(d.device_timestamp).getHours()===h);
     return pts.length ? Math.round(pts.reduce((a,d)=>a+d.glucose_mg_dl,0)/pts.length) : null;
@@ -919,9 +922,15 @@ async function renderCgmChart() {
     type:'bar',
     data:{
       labels: Array.from({length:24},(_,i)=>i+':00'),
-      datasets:[{label:'均值血糖',data:hourly,backgroundColor:hourly.map(v=>!v?'transparent':v<70?'rgba(239,68,68,.6)':v>180?'rgba(245,158,11,.6)':'rgba(34,197,94,.6)'),borderRadius:4}]
+      datasets:[{label:'均值血糖',data:hourly,backgroundColor:hourly.map(v=>!v?'transparent':v<70?'rgba(248,113,113,.6)':v>180?'rgba(251,191,36,.6)':'rgba(52,211,153,.6)'),borderRadius:4}]
     },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:60,max:220,ticks:{font:{size:10}}},x:{ticks:{maxTicksLimit:12,font:{size:10}}}}}
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{min:60,max:220,ticks:{font:{size:10},color:'#7b8299'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        x:{ticks:{maxTicksLimit:12,font:{size:10},color:'#7b8299'},grid:{display:false}}
+      }
+    }
   });
 }
 
@@ -942,20 +951,15 @@ function handleFile(file) {
 
 function parseLibreCSV(text) {
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-
-  // Find header row containing "Device Timestamp"
   let headerIdx = lines.findIndex(l => l.toLowerCase().includes('device timestamp'));
   if (headerIdx === -1) { showStatus('❌ 未找到 Device Timestamp 列，请确认是 FreeStyle Libre 导出的 CSV'); return; }
-
   const headers = lines[headerIdx].split(',').map(h=>h.replace(/"/g,'').trim().toLowerCase());
   const tsCol = headers.findIndex(h=>h.includes('device timestamp'));
   const rtCol = headers.findIndex(h=>h.includes('record type'));
   const hgCol = headers.findIndex(h=>h.includes('historic glucose'));
   const sgCol = headers.findIndex(h=>h.includes('scan glucose'));
-
   const dataLines = lines.slice(headerIdx + 1);
   parsedCSV = [];
-
   for (const line of dataLines) {
     const cols = line.split(',').map(c=>c.replace(/"/g,'').trim());
     if (cols.length < 3) continue;
@@ -968,25 +972,20 @@ function parseLibreCSV(text) {
       parsedCSV.push({ device_timestamp: ts.toISOString(), glucose_mg_dl: glucose, record_type: recordType });
     }
   }
-
   if (!parsedCSV.length) { showStatus('❌ 未能解析到有效血糖数据，请检查文件格式'); return; }
-
   const dates = parsedCSV.map(d=>new Date(d.device_timestamp));
   const avgG = Math.round(parsedCSV.reduce((a,d)=>a+d.glucose_mg_dl,0)/parsedCSV.length);
   document.getElementById('parseCount').textContent = parsedCSV.length + ' 条';
   document.getElementById('parseDateRange').textContent = dates.reduce((a,b)=>a<b?a:b).toLocaleDateString('zh-CN') + ' — ' + dates.reduce((a,b)=>a>b?a:b).toLocaleDateString('zh-CN');
   document.getElementById('parseAvg').textContent = avgG + ' mg/dL';
   document.getElementById('parseResult').style.display = 'block';
-
-  // Preview table
   const preview = parsedCSV.slice(0,20);
-  document.getElementById('previewTable').innerHTML = `<thead><tr><th>时间</th><th>血糖 (mg/dL)</th></tr></thead><tbody>${preview.map(d=>`<tr><td>${new Date(d.device_timestamp).toLocaleString('zh-CN')}</td><td style="color:${d.glucose_mg_dl<70?'var(--red)':d.glucose_mg_dl>180?'#f59e0b':'var(--green)'};font-weight:500">${Math.round(d.glucose_mg_dl)}</td></tr>`).join('')}</tbody>`;
+  document.getElementById('previewTable').innerHTML = `<thead><tr><th>时间</th><th>血糖 (mg/dL)</th></tr></thead><tbody>${preview.map(d=>`<tr><td>${new Date(d.device_timestamp).toLocaleString('zh-CN')}</td><td style="color:${d.glucose_mg_dl<70?'var(--red)':d.glucose_mg_dl>180?'var(--amber)':'var(--green)'};font-weight:500">${Math.round(d.glucose_mg_dl)}</td></tr>`).join('')}</tbody>`;
   document.getElementById('previewCard').style.display = 'block';
 }
 
 function parseTimestamp(raw) {
   if (!raw) return null;
-  // MM-DD-YYYY HH:MM AM/PM  (FreeStyle Libre 3 US format)
   const m12 = raw.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i);
   if (m12) {
     let h = parseInt(m12[4]);
@@ -995,10 +994,8 @@ function parseTimestamp(raw) {
     if (ampm === 'AM' && h === 12) h = 0;
     return new Date(`${m12[3]}-${m12[1]}-${m12[2]}T${String(h).padStart(2,'0')}:${min}:00`);
   }
-  // YYYY-MM-DD HH:MM
   const iso = new Date(raw.replace(/\//g,'-'));
   if (!isNaN(iso.getTime())) return iso;
-  // DD-MM-YYYY HH:MM
   const mdmy = raw.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})\s+(\d{2}):(\d{2})/);
   if (mdmy) return new Date(`${mdmy[3]}-${mdmy[2]}-${mdmy[1]}T${mdmy[4]}:${mdmy[5]}:00`);
   return null;
@@ -1009,7 +1006,6 @@ async function uploadToSupabase() {
   if (!parsedCSV.length) return;
   document.getElementById('uploadProgress').style.display = 'block';
   document.getElementById('uploadBar').style.width = '0%';
-
   const batchSize = 500;
   let uploaded = 0;
   for (let i = 0; i < parsedCSV.length; i += batchSize) {
@@ -1021,7 +1017,7 @@ async function uploadToSupabase() {
     document.getElementById('uploadBar').style.width = Math.round(uploaded/parsedCSV.length*100)+'%';
   }
   document.getElementById('uploadMsg').textContent = `✅ 成功上传 ${uploaded} 条记录`;
-  document.getElementById('uploadBar').style.background = '#22c55e';
+  document.getElementById('uploadBar').style.background = 'var(--green)';
   showStatus('✅ CGM 数据上传完成');
   await loadCgmData();
   renderDashboard();
@@ -1075,7 +1071,7 @@ async function loadHistory() {
   if (!dailyRecords.length) { document.getElementById('histMsg').textContent='暂无记录'; return; }
   tbody.innerHTML = dailyRecords.slice(0,30).map(r=>{
     const fg = r.fasting_glucose;
-    const fgColor = !fg?'':fg<=100?'var(--green)':fg<=125?'#f59e0b':'var(--red)';
+    const fgColor = !fg?'':fg<=100?'var(--green)':fg<=125?'var(--amber)':'var(--red)';
     const badge = !fg?'':fg<=100?'b-green':fg<=125?'b-amber':'b-red';
     return `<tr>
       <td>${r.record_date}</td>
@@ -1092,7 +1088,7 @@ async function loadHistory() {
 let curHistTab = 'glucose';
 function showHistTab(tab, el) {
   curHistTab = tab;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#page-history .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   renderHistChart(tab);
 }
@@ -1103,13 +1099,13 @@ function renderHistChart(tab) {
   let datasets = [];
   if (tab === 'glucose') {
     datasets = [
-      {label:'空腹血糖',data:data.map(r=>r.fasting_glucose),borderColor:'#3b82f6',tension:.4,pointRadius:3,borderWidth:2},
-      {label:'餐后血糖',data:data.map(r=>r.post_meal_glucose),borderColor:'#f59e0b',tension:.4,pointRadius:3,borderWidth:2}
+      {label:'空腹血糖',data:data.map(r=>r.fasting_glucose),borderColor:'#8b5cf6',tension:.4,pointRadius:3,borderWidth:2},
+      {label:'餐后血糖',data:data.map(r=>r.post_meal_glucose),borderColor:'#34d399',tension:.4,pointRadius:3,borderWidth:2}
     ];
   } else if (tab === 'bp') {
     datasets = [
-      {label:'收缩压',data:data.map(r=>r.systolic_bp),borderColor:'#ef4444',tension:.4,pointRadius:3,borderWidth:2},
-      {label:'舒张压',data:data.map(r=>r.diastolic_bp),borderColor:'#f97316',tension:.4,pointRadius:3,borderWidth:2}
+      {label:'收缩压',data:data.map(r=>r.systolic_bp),borderColor:'#f87171',tension:.4,pointRadius:3,borderWidth:2},
+      {label:'舒张压',data:data.map(r=>r.diastolic_bp),borderColor:'#fbbf24',tension:.4,pointRadius:3,borderWidth:2}
     ];
   } else {
     datasets = [{label:'体重 (lbs)',data:data.map(r=>r.weight_lbs),borderColor:'#8b5cf6',tension:.4,pointRadius:3,borderWidth:2,fill:true,backgroundColor:'rgba(139,92,246,.07)'}];
@@ -1117,7 +1113,14 @@ function renderHistChart(tab) {
   if (histChart) histChart.destroy();
   histChart = new Chart(document.getElementById('histChart'),{
     type:'line',data:{labels,datasets},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11},padding:12}}},scales:{y:{ticks:{font:{size:10}}},x:{ticks:{font:{size:10},maxTicksLimit:10}}}}
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{font:{size:11},padding:12,color:'#7b8299'}}},
+      scales:{
+        y:{ticks:{font:{size:10},color:'#7b8299'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'#7b8299',maxTicksLimit:10},grid:{display:false}}
+      }
+    }
   });
 }
 
@@ -1145,12 +1148,10 @@ async function getAiAnalysis() {
     return;
   }
 
-  // Collect data: last 90 days (3 months)
   const now = Date.now();
   const ninetyDaysAgo = now - 90 * 24 * 3600 * 1000;
-
-  // CGM: 3-month overall stats + weekly breakdown
   const recentCgm = cgmData.filter(r => new Date(r.device_timestamp).getTime() >= ninetyDaysAgo);
+
   function cgmStats(arr) {
     if (!arr.length) return null;
     const inRange = arr.filter(r => r.glucose_mg_dl >= 70 && r.glucose_mg_dl <= 180).length;
@@ -1159,9 +1160,8 @@ async function getAiAnalysis() {
     const avg = Math.round(arr.reduce((s,r)=>s+r.glucose_mg_dl,0)/arr.length);
     return { tir: Math.round(inRange/arr.length*100), low: Math.round(low/arr.length*100), high: Math.round(high/arr.length*100), avg, max: Math.max(...arr.map(r=>r.glucose_mg_dl)), min: Math.min(...arr.map(r=>r.glucose_mg_dl)) };
   }
-  const overall = cgmStats(recentCgm);
 
-  // Weekly CGM breakdown (last 12 weeks)
+  const overall = cgmStats(recentCgm);
   const weeklyLines = [];
   for (let w = 0; w < 12; w++) {
     const wEnd = now - w * 7 * 24 * 3600 * 1000;
@@ -1173,18 +1173,15 @@ async function getAiAnalysis() {
     weeklyLines.unshift(`  ${label}: 均值${s.avg} TIR${s.tir}% 低血糖${s.low}% 高血糖${s.high}%`);
   }
 
-  // Daily records: use all loaded records (up to 60 days)
-  const allRecords = dailyRecords; // sorted desc by record_date
+  const allRecords = dailyRecords;
   const hba1cRecords = allRecords.filter(r=>r.hba1c).map(r=>`${r.record_date.slice(0,7)} ${r.hba1c}%`);
   const weightRecords = allRecords.filter(r=>r.weight_lbs).slice(0,12).map(r=>`${r.record_date.slice(5)} ${r.weight_lbs}lbs`);
-  const fastingArr = allRecords.filter(r=>r.fasting_glucose);
-  const postMealArr = allRecords.filter(r=>r.post_meal_glucose);
   function avg90(arr, field) {
     const vals = arr.map(r=>r[field]).filter(Boolean);
     return vals.length ? Math.round(vals.reduce((s,v)=>s+v,0)/vals.length) : null;
   }
-  const avgFasting = avg90(fastingArr, 'fasting_glucose');
-  const avgPostMeal = avg90(postMealArr, 'post_meal_glucose');
+  const avgFasting = avg90(allRecords.filter(r=>r.fasting_glucose), 'fasting_glucose');
+  const avgPostMeal = avg90(allRecords.filter(r=>r.post_meal_glucose), 'post_meal_glucose');
   const recentNotes = allRecords.filter(r=>r.notes).slice(0,10).map(r=>`${r.record_date.slice(5)}: ${r.notes}`).join('；');
 
   const dataBlock = [
@@ -1222,12 +1219,7 @@ async function getAiAnalysis() {
         max_tokens: 1500,
         stream: true,
         system: '你是一位专业的糖尿病健康顾问。请根据用户提供的近三个月健康数据，用中文给出清晰详细的分析建议。分析必须包含以下四个部分，每部分用标题标注：\n①数据解读：解读近三个月的血糖趋势、HbA1c、体重等各项指标变化\n②风险提示：指出当前数据中存在的潜在健康风险\n③饮食/运动建议：结合数据给出具体可行的建议\n④下次就诊关注点：列出下次看诊时需要重点讨论的问题\n\n最后注明：本分析仅供参考，不构成医疗诊断，请遵医嘱。',
-        messages: [
-          {
-            role: 'user',
-            content: `以下是我近三个月的糖尿病健康数据，请帮我全面分析：\n\n${dataBlock}`
-          }
-        ]
+        messages: [{ role: 'user', content: `以下是我近三个月的糖尿病健康数据，请帮我全面分析：\n\n${dataBlock}` }]
       })
     });
 
@@ -1239,7 +1231,6 @@ async function getAiAnalysis() {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -1248,9 +1239,8 @@ async function getAiAnalysis() {
       buffer = lines.pop();
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
         try {
-          const chunk = JSON.parse(data);
+          const chunk = JSON.parse(line.slice(6).trim());
           if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta') {
             result.textContent += chunk.delta.text;
           }
@@ -1280,10 +1270,9 @@ function showStatus(msg, ms=3000) {
   const hasKey = localStorage.getItem(SUPABASE_KEY_KEY);
 
   if (!hasPw || !hasUrl || !hasKey) {
-    // First time — show setup screen
     document.getElementById('lockScreen').innerHTML = `
       <div class="lock-box">
-        <div style="font-size:36px;margin-bottom:12px">⚙️</div>
+        <span class="lock-icon">⚙️</span>
         <h2>首次设置</h2>
         <p>请先配置 Supabase 连接和访问密码</p>
         <button onclick="document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';openConfig()">开始配置</button>
@@ -1291,11 +1280,9 @@ function showStatus(msg, ms=3000) {
     return;
   }
 
-  // Config exists — check if session is still unlocked (sessionStorage flag)
   if (sessionStorage.getItem('dm_unlocked') === '1') {
     unlock();
   }
-  // else: show lock screen with password prompt (already rendered by default)
 })();
 </script>
 </body>
