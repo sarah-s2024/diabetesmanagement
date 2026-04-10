@@ -877,6 +877,7 @@ function unlock() {
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   initSupabase(); setTodayDate(); renderGreeting();
+  renderMedList(); renderMedDashTab();
   setTimeout(loadAllData, 300);
 }
 function lock() {
