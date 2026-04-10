@@ -1,6 +1,6 @@
 [build]
   base = "react-app"
-  command = "npm install && node scripts/encrypt-config.mjs && npm run build"
+  command = "npm install && npm run build"
   publish = "dist"
 
 [[redirects]]
