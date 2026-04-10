@@ -1464,7 +1464,7 @@ HbA1c:${snap.hba1c||'未知'}% 用药:${snap.meds}
 
 // ─── Main dashboard render ───
 function renderDashboard() {
-  let tirPct = null, avg = null, sd = null, fasting = null, hba1c = null, bmi = null, weightLbs = null, gmi = null;
+  let tirPct = null, avg = null, sd = null, fasting = null, hba1c = null, bmi = null, weightLbs = null, gmi = null, kg = null;
 
   if (cgmData.length) {
     const last = cgmData[cgmData.length-1];
