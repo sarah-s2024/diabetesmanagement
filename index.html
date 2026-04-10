@@ -946,8 +946,28 @@ function showPage(id, btn) {
 // ─── Data loading ───
 async function loadAllData() {
   if (!sb) return;
-  await Promise.all([loadCgmData(), loadDailyRecords()]);
+  await Promise.all([loadCgmData(), loadDailyRecords(), loadGmiAllData()]);
   renderDashboard();
+}
+
+// Paginate through ALL cgm_readings to compute true GMI from full dataset
+async function loadGmiAllData() {
+  if (!sb) return;
+  const pageSize = 1000;
+  let allVals = [], from = 0;
+  while (true) {
+    const { data, error } = await sb.from('cgm_readings')
+      .select('glucose_mg_dl').not('glucose_mg_dl','is',null)
+      .range(from, from + pageSize - 1);
+    if (error || !data || data.length === 0) break;
+    allVals.push(...data.map(d => d.glucose_mg_dl));
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  if (allVals.length) {
+    const mean = allVals.reduce((a,b)=>a+b,0) / allVals.length;
+    gmiGlobal = Math.round((3.31 + 0.02392 * mean) * 10) / 10;
+  }
 }
 async function loadCgmData(from, to) {
   let q = sb.from('cgm_readings').select('device_timestamp,glucose_mg_dl')
