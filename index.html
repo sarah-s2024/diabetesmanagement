@@ -8,14 +8,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{
-  --bg:#06080f;--surface:#0d1018;--surface2:#141821;--surface3:#1a1f2e;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
-  --text:#eef0f8;--muted:#6b7691;--muted2:#4e566b;
-  --accent:#8b5cf6;--accent-glow:rgba(139,92,246,.3);
-  --green:#34d399;--green-glow:rgba(52,211,153,.25);--green-dim:rgba(52,211,153,.13);
-  --red:#f87171;--red-dim:rgba(248,113,113,.13);
-  --amber:#fbbf24;--amber-dim:rgba(251,191,36,.13);
-  --blue:#60a5fa;--blue-dim:rgba(96,165,250,.13);
+  --bg:#f4f6fb;--surface:#ffffff;--surface2:#eef1f8;--surface3:#e4e8f2;
+  --border:rgba(0,0,0,.07);--border2:rgba(0,0,0,.04);
+  --text:#1a1d2e;--muted:#7c849b;--muted2:#a0a8bc;
+  --accent:#7c5cf6;--accent-glow:rgba(124,92,246,.18);
+  --green:#10b981;--green-glow:rgba(16,185,129,.18);--green-dim:rgba(16,185,129,.1);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.1);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.1);
+  --blue:#3b82f6;--blue-dim:rgba(59,130,246,.1);
   --radius:18px;--radius-sm:12px;--nav-h:72px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -27,29 +27,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sa
 
 /* ─── Lock screen ─── */
 #lockScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
-.lock-box{background:linear-gradient(160deg,rgba(20,24,33,.98),rgba(13,16,24,.99));
-  border:1px solid rgba(139,92,246,.2);border-radius:28px;padding:48px 38px;
+.lock-box{background:#fff;
+  border:1px solid rgba(124,92,246,.15);border-radius:28px;padding:48px 38px;
   width:340px;text-align:center;
-  box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(139,92,246,.08),inset 0 1px 0 rgba(255,255,255,.06)}
+  box-shadow:0 20px 60px rgba(0,0,0,.08),0 0 0 1px rgba(124,92,246,.06)}
 .lock-icon{font-size:48px;margin-bottom:16px;display:block;
-  filter:drop-shadow(0 0 24px rgba(139,92,246,.6)) drop-shadow(0 0 8px rgba(52,211,153,.3))}
+  filter:drop-shadow(0 0 16px rgba(124,92,246,.3)) drop-shadow(0 0 6px rgba(16,185,129,.15))}
 .lock-box h2{font-size:24px;font-weight:700;margin-bottom:8px;
-  background:linear-gradient(135deg,#c4b5fd 0%,#a78bfa 40%,#34d399 100%);
+  background:linear-gradient(135deg,#7c5cf6 0%,#6d28d9 40%,#10b981 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .lock-box p{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
 .lock-box input{width:100%;padding:14px 16px;border:1px solid var(--border);border-radius:14px;
   font-size:20px;letter-spacing:8px;text-align:center;background:var(--surface2);
   color:var(--text);margin-bottom:14px;outline:none;transition:.25s}
-.lock-box input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(139,92,246,.18)}
+.lock-box input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(124,92,246,.18)}
 .lock-box button{width:100%;padding:14px;
-  background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;
+  background:linear-gradient(135deg,#7c5cf6,#6d28d9);color:#fff;border:none;
   border-radius:14px;font-size:15px;cursor:pointer;font-weight:600;
-  box-shadow:0 6px 24px rgba(139,92,246,.45);transition:.2s}
+  box-shadow:0 6px 24px rgba(124,92,246,.3);transition:.2s}
 .lock-box button:active{transform:scale(.98)}
 .lock-err{color:var(--red);font-size:12px;margin-top:12px;min-height:18px}
 
 /* ─── Config modal ─── */
-#configModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+#configModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);
   backdrop-filter:blur(12px);z-index:998;align-items:flex-end;justify-content:center}
 #configModal.show{display:flex}
 .modal-box{background:var(--surface);border:1px solid var(--border);
@@ -66,22 +66,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sa
 .btn{padding:10px 20px;border-radius:12px;font-size:13px;cursor:pointer;
   border:1px solid var(--border);background:var(--surface2);color:var(--text);font-weight:500;transition:.15s}
 .btn:active{transform:scale(.97)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;border:none;
-  box-shadow:0 4px 16px rgba(139,92,246,.35)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;border:none;
+  box-shadow:0 4px 16px rgba(124,92,246,.25)}
 
 /* ─── App shell ─── */
 #app{display:none}
-.app-bar{position:sticky;top:0;z-index:50;background:rgba(6,8,15,.88);
+.app-bar{position:sticky;top:0;z-index:50;background:rgba(244,246,251,.88);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .app-bar-inner{display:flex;align-items:center;justify-content:space-between;
   padding:12px 20px;border-bottom:1px solid var(--border)}
 .app-title{font-size:16px;font-weight:700;
-  background:linear-gradient(135deg,#c4b5fd,#34d399);
+  background:linear-gradient(135deg,#7c5cf6,#10b981);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .bar-actions{display:flex;gap:6px;align-items:center}
 .icon-btn{padding:5px 11px;border:1px solid var(--border);border-radius:8px;
   cursor:pointer;background:var(--surface2);color:var(--muted);font-size:12px;transition:.15s}
-.icon-btn:hover{color:var(--text);border-color:rgba(255,255,255,.15)}
+.icon-btn:hover{color:var(--text);border-color:rgba(0,0,0,.15)}
 #connStatus{font-size:11px;color:var(--muted)}
 
 main{padding:0 18px 16px;max-width:640px;margin:0 auto}
@@ -89,7 +89,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 
 /* ─── Bottom nav ─── */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
-  background:rgba(10,12,20,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  background:rgba(255,255,255,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;
   padding:0 4px env(safe-area-inset-bottom,0);z-index:100}
 .nav-tab{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;
@@ -112,7 +112,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .ring-hero{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;position:relative}
 .ring-glow-bg{position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:240px;height:240px;border-radius:50%;
-  background:radial-gradient(circle,rgba(139,92,246,.14) 0%,rgba(52,211,153,.06) 50%,transparent 70%);
+  background:radial-gradient(circle,rgba(124,92,246,.1) 0%,rgba(16,185,129,.05) 50%,transparent 70%);
   pointer-events:none}
 .ring-container{position:relative;width:210px;height:210px;z-index:1}
 .ring-svg{width:210px;height:210px;transform:rotate(-90deg)}
@@ -122,7 +122,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;text-align:center;gap:2px}
 .ring-score{font-size:56px;font-weight:800;letter-spacing:-3px;line-height:1;
-  background:linear-gradient(160deg,#c4b5fd 0%,#a78bfa 40%,#34d399 100%);
+  background:linear-gradient(160deg,#7c5cf6 0%,#6d28d9 40%,#10b981 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .ring-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
 .ring-state{font-size:13px;font-weight:600;margin-top:2px}
@@ -133,7 +133,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
   border-radius:20px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border)}
 .state-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .streak-pill{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;
-  border-radius:20px;font-size:12px;background:var(--amber-dim);border:1px solid rgba(251,191,36,.2);color:var(--amber)}
+  border-radius:20px;font-size:12px;background:var(--amber-dim);border:1px solid rgba(245,158,11,.2);color:var(--amber)}
 
 /* ─── Contributor cards ─── */
 .contrib-section{margin-bottom:14px}
@@ -144,8 +144,9 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .contrib-scroll::-webkit-scrollbar{display:none}
 .contrib-card{flex:0 0 108px;background:var(--surface);border:1px solid var(--border);
   border-radius:var(--radius-sm);padding:14px 12px;scroll-snap-align:start;
-  display:flex;flex-direction:column;align-items:flex-start;gap:3px;transition:.2s}
-.contrib-card:hover{border-color:rgba(255,255,255,.12)}
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;transition:.2s;
+  box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.contrib-card:hover{border-color:rgba(0,0,0,.12)}
 .contrib-icon{font-size:16px;margin-bottom:2px}
 .contrib-val{font-size:22px;font-weight:700;line-height:1.1;letter-spacing:-.5px}
 .contrib-name{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
@@ -153,9 +154,9 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .c-dot{width:5px;height:5px;border-radius:50%}
 
 /* ─── Now card ─── */
-.now-card{background:linear-gradient(135deg,rgba(20,24,33,1) 0%,rgba(16,20,29,1) 100%);
+.now-card{background:linear-gradient(135deg,#ffffff 0%,#f8f9fe 100%);
   border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;
-  margin-bottom:12px;position:relative;overflow:hidden}
+  margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .now-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--accent),var(--green),transparent);opacity:.5}
 .now-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
@@ -168,18 +169,18 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 /* Glucose range bar */
 .glucose-bar{position:relative;height:8px;background:var(--surface2);border-radius:4px;overflow:visible;margin-top:4px}
 .glucose-bar-zones{position:absolute;inset:0;display:flex;border-radius:4px;overflow:hidden}
-.gz-low{flex:0 0 14.3%;background:rgba(248,113,113,.35)}
-.gz-in{flex:0 0 55.3%;background:rgba(52,211,153,.2)}
-.gz-high{flex:1;background:rgba(251,191,36,.25)}
+.gz-low{flex:0 0 14.3%;background:rgba(239,68,68,.35)}
+.gz-in{flex:0 0 55.3%;background:rgba(16,185,129,.2)}
+.gz-high{flex:1;background:rgba(245,158,11,.25)}
 .glucose-pointer{position:absolute;top:50%;transform:translateY(-50%) translateX(-50%);
   width:16px;height:16px;border-radius:50%;background:var(--text);
-  border:2px solid var(--bg);box-shadow:0 2px 10px rgba(0,0,0,.5);transition:left .5s ease;z-index:2}
+  border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.18);transition:left .5s ease;z-index:2}
 .range-labels{display:flex;justify-content:space-between;margin-top:5px}
 .range-labels span{font-size:9px;color:var(--muted2)}
 
 /* ─── Cards ─── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:18px;margin-bottom:12px}
+  padding:18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
   letter-spacing:.6px;margin-bottom:14px}
 .section-sep{height:1px;background:var(--border2);margin:8px 0 16px}
@@ -187,7 +188,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 /* ─── Metric grid ─── */
 .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .metric-card{background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:16px 14px}
+  border-radius:var(--radius-sm);padding:16px 14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
 .metric-label{font-size:10px;color:var(--muted);margin-bottom:5px;
   text-transform:uppercase;letter-spacing:.4px;font-weight:600}
 .metric-val{font-size:24px;font-weight:700;letter-spacing:-.5px}
@@ -207,14 +208,14 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .tab{flex:1;padding:8px 10px;font-size:12px;cursor:pointer;color:var(--muted);
   border-radius:10px;text-align:center;transition:.2s;font-weight:500}
 .tab.active{background:var(--surface);color:var(--text);
-  box-shadow:0 1px 6px rgba(0,0,0,.35);font-weight:600}
+  box-shadow:0 1px 6px rgba(0,0,0,.08);font-weight:600}
 .dash-tab{display:none}.dash-tab.active{display:block}
 
 /* ─── BMI gauge ─── */
 .bmi-wrap{text-align:center}
 
 /* ─── Insights card ─── */
-.insight-text{font-size:13px;line-height:1.8;color:rgba(238,240,248,.75)}
+.insight-text{font-size:13px;line-height:1.8;color:rgba(26,29,46,.75)}
 .insight-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .insight-item:last-child{border-bottom:none;padding-bottom:0}
 .insight-icon{font-size:18px;flex-shrink:0;margin-top:1px}
@@ -238,9 +239,9 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .b-blue{background:var(--blue-dim);color:var(--blue)}
 
 /* ─── Upload ─── */
-.upload-zone{border:2px dashed rgba(139,92,246,.25);border-radius:var(--radius);
-  padding:32px;text-align:center;cursor:pointer;transition:.25s;background:rgba(139,92,246,.04)}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(139,92,246,.1)}
+.upload-zone{border:2px dashed rgba(124,92,246,.25);border-radius:var(--radius);
+  padding:32px;text-align:center;cursor:pointer;transition:.25s;background:rgba(124,92,246,.04)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(124,92,246,.1)}
 .upload-zone input{display:none}
 .upload-icon{font-size:36px;margin-bottom:12px}
 .upload-zone p{font-size:13px;color:var(--muted)}
@@ -254,35 +255,35 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
   border-radius:10px;font-size:13px;background:var(--surface2);color:var(--text);outline:none;transition:.2s}
 .field input:focus,.field textarea:focus{border-color:var(--accent);background:var(--surface3)}
 .field textarea{resize:vertical;min-height:64px}
-.range-tip{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);
+.range-tip{background:rgba(124,92,246,.06);border:1px solid rgba(124,92,246,.15);
   border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;
-  color:rgba(196,181,253,.85);margin-bottom:14px;line-height:1.7}
+  color:rgba(109,40,217,.75);margin-bottom:14px;line-height:1.7}
 
 /* ─── AI ─── */
-.ai-btn{width:100%;padding:14px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);
+.ai-btn{width:100%;padding:14px;background:linear-gradient(135deg,#7c5cf6,#6d28d9);
   color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;
-  cursor:pointer;transition:.2s;box-shadow:0 6px 24px rgba(139,92,246,.35);letter-spacing:.2px}
-.ai-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 28px rgba(139,92,246,.45)}
+  cursor:pointer;transition:.2s;box-shadow:0 6px 24px rgba(124,92,246,.25);letter-spacing:.2px}
+.ai-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,92,246,.35)}
 .ai-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.ai-result{margin-top:16px;font-size:13px;line-height:1.9;color:rgba(238,240,248,.85);
+.ai-result{margin-top:16px;font-size:13px;line-height:1.9;color:rgba(26,29,46,.85);
   white-space:pre-wrap;display:none;background:var(--surface2);border-radius:14px;
   padding:16px;border:1px solid var(--border)}
 .ai-result.show{display:block}
 .ai-spinner{display:inline-block;width:14px;height:14px;
-  border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;
+  border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;
   animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ─── Risk cards ─── */
 .risk-card{border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:10px}
-.risk-card.danger{border-color:rgba(248,113,113,.2);background:rgba(248,113,113,.04)}
-.risk-card.warn{border-color:rgba(251,191,36,.18);background:rgba(251,191,36,.03)}
+.risk-card.danger{border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.04)}
+.risk-card.warn{border-color:rgba(245,158,11,.18);background:rgba(245,158,11,.03)}
 
 /* ─── Status bar ─── */
 #statusBar{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);
   background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;
   padding:10px 18px;border-radius:20px;z-index:200;display:none;
-  white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5);font-weight:500}
+  white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.1);font-weight:500}
 
 /* ─── Section headers ─── */
 .page-head{padding:20px 0 14px}
@@ -296,7 +297,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .meal-list div:last-child{border-bottom:none}
 .target-pill{display:inline-flex;padding:4px 12px;border-radius:20px;
   background:var(--green-dim);color:var(--green);font-size:11px;font-weight:600;
-  margin-right:6px;margin-bottom:6px;border:1px solid rgba(52,211,153,.18)}
+  margin-right:6px;margin-bottom:6px;border:1px solid rgba(16,185,129,.18)}
 
 /* Medication styles */
 .med-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -310,8 +311,8 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .med-active{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--green-dim);color:var(--green);margin-bottom:6px}
 .med-stopped{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:5px;background:rgba(107,118,145,.15);color:var(--muted);margin-bottom:6px}
 .med-stop-btn{font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:.15s}
-.med-stop-btn:hover{color:var(--red);border-color:rgba(248,113,113,.3)}
-.med-del-btn{font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid rgba(248,113,113,.2);background:var(--red-dim);color:var(--red);cursor:pointer}
+.med-stop-btn:hover{color:var(--red);border-color:rgba(239,68,68,.3)}
+.med-del-btn{font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid rgba(239,68,68,.2);background:var(--red-dim);color:var(--red);cursor:pointer}
 .med-empty{font-size:13px;color:var(--muted);text-align:center;padding:24px 0}
 
 /* Exercise plan list */
@@ -331,10 +332,55 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 .ex-item:last-child{border-bottom:none}
 .ex-item-name{font-size:12px;font-weight:500}
 .ex-item-detail{font-size:10px;color:var(--muted);margin-top:2px}
-.ex-yt{font-size:10px;padding:3px 9px;border-radius:6px;background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);cursor:pointer;white-space:nowrap;text-decoration:none;flex-shrink:0}
-.ex-today{background:rgba(139,92,246,.2);color:var(--accent);font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.3px}
+.ex-yt{font-size:10px;padding:3px 9px;border-radius:6px;background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2);cursor:pointer;white-space:nowrap;text-decoration:none;flex-shrink:0}
+.ex-today{background:rgba(124,92,246,.2);color:var(--accent);font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.3px}
 
 @media(max-width:400px){main{padding:0 14px 16px}.metric-grid{gap:8px}}
+
+/* ─── AI Analysis Page ─── */
+.ai-page-header{display:flex;align-items:center;gap:12px;padding:16px;position:sticky;top:0;background:rgba(244,246,251,.92);backdrop-filter:blur(12px);z-index:10}
+.ai-back-btn{width:36px;height:36px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+#aiPageResult{background:none;border:none;padding:0}
+
+/* ─── Agent Chat ─── */
+#agentFab{position:fixed;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 16px);right:16px;
+  width:54px;height:54px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;font-size:24px;
+  box-shadow:0 4px 20px rgba(124,92,246,.25);cursor:pointer;z-index:800;
+  display:flex;align-items:center;justify-content:center;transition:transform .2s}
+#agentFab:active{transform:scale(.9)}
+#agentModal{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;background:#f4f6fb}
+#agentModal.show{display:flex}
+.agent-header{display:flex;align-items:center;padding:14px 16px;gap:12px;
+  background:var(--surface);border-bottom:1px solid var(--border)}
+.agent-header h3{flex:1;font-size:16px;font-weight:600}
+.agent-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px 8px}
+.agent-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;
+  -webkit-overflow-scrolling:touch}
+.agent-msg{max-width:88%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.65;word-break:break-word}
+.agent-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.agent-msg.assistant{align-self:flex-start;background:var(--surface2);color:var(--text);border-bottom-left-radius:4px}
+.agent-msg.tool{align-self:flex-start;background:var(--surface3);color:var(--muted);font-size:11px;
+  border-left:3px solid var(--accent);padding:6px 10px;max-width:92%;font-family:monospace;white-space:pre-wrap;max-height:120px;overflow-y:auto}
+.agent-msg.assistant .md-text{white-space:pre-wrap}
+.agent-typing{align-self:flex-start;color:var(--muted);font-size:12px;padding:6px 0;display:none;align-items:center;gap:6px}
+.agent-typing.show{display:flex}
+.agent-typing .dot{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1.4s infinite both}
+.agent-typing .dot:nth-child(2){animation-delay:.2s}
+.agent-typing .dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.agent-input-bar{display:flex;gap:8px;padding:12px 16px;
+  background:var(--surface);border-top:1px solid var(--border);
+  padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.agent-input-bar textarea{flex:1;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:14px;
+  resize:none;min-height:40px;max-height:120px;font-family:inherit;line-height:1.5}
+.agent-input-bar textarea::placeholder{color:var(--muted2)}
+.agent-send{width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--accent);color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;align-self:flex-end}
+.agent-send:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -366,8 +412,12 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
     <div class="form-row">
       <label>Claude API Key（AI 健康分析）</label>
       <input id="cfgOpenaiKey" placeholder="sk-ant-..." type="password">
-      <p style="font-size:11px;color:var(--muted);margin-top:5px">Key 仅保存在本地浏览器，不上传任何服务器</p>
     </div>
+    <div class="form-row">
+      <label>OpenRouter API Key（可选，优先使用）</label>
+      <input id="cfgOpenrouterKey" placeholder="sk-or-..." type="password">
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:5px">Key 仅保存在本地浏览器，不上传任何服务器</p>
     <div class="modal-btns">
       <button class="btn btn-primary" onclick="saveConfig()">保存并连接</button>
       <button class="btn" onclick="closeConfig()">取消</button>
@@ -407,9 +457,9 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
           <svg class="ring-svg" viewBox="0 0 210 210">
             <defs>
               <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#a78bfa"/>
-                <stop offset="50%" style="stop-color:#8b5cf6"/>
-                <stop offset="100%" style="stop-color:#34d399"/>
+                <stop offset="0%" style="stop-color:#7c5cf6"/>
+                <stop offset="50%" style="stop-color:#6d28d9"/>
+                <stop offset="100%" style="stop-color:#10b981"/>
               </linearGradient>
             </defs>
             <circle class="ring-bg" cx="105" cy="105" r="91"/>
@@ -502,13 +552,13 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
           <div class="bmi-wrap">
             <svg viewBox="0 0 200 120" style="width:170px;height:105px;display:block;margin:0 auto">
               <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--surface3)" stroke-width="14" stroke-linecap="round"/>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#60a5fa" stroke-width="14" stroke-linecap="round" stroke-dasharray="35.2 251"/>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#34d399" stroke-width="14" stroke-dasharray="65.3 251" stroke-dashoffset="-35.2"/>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#fbbf24" stroke-width="14" stroke-dasharray="50.3 251" stroke-dashoffset="-100.5"/>
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f87171" stroke-width="14" stroke-dasharray="100.5 251" stroke-dashoffset="-150.8"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#3b82f6" stroke-width="14" stroke-linecap="round" stroke-dasharray="35.2 251"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#10b981" stroke-width="14" stroke-dasharray="65.3 251" stroke-dashoffset="-35.2"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="50.3 251" stroke-dashoffset="-100.5"/>
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="100.5 251" stroke-dashoffset="-150.8"/>
               <line id="bmiNeedle" x1="100" y1="100" x2="100" y2="35" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round"/>
               <circle cx="100" cy="100" r="5" fill="var(--text)"/>
-              <text id="bmiGaugeVal" x="100" y="84" text-anchor="middle" font-size="20" font-weight="700" fill="#34d399">--</text>
+              <text id="bmiGaugeVal" x="100" y="84" text-anchor="middle" font-size="20" font-weight="700" fill="#10b981">--</text>
             </svg>
             <div id="d-bmi-label" style="font-size:11px;color:var(--muted);text-align:center;margin-top:-4px">BMI 分类: --</div>
           </div>
@@ -554,10 +604,10 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
           </div>
           <div class="chart-wrap" style="height:170px"><canvas id="exerciseChart"></canvas></div>
           <div style="display:flex;gap:12px;margin-top:10px;margin-bottom:14px;font-size:10px;color:var(--muted);flex-wrap:wrap">
-            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(139,92,246,.8);border-radius:2px;margin-right:4px;vertical-align:middle"></span>力量训练</span>
-            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(52,211,153,.75);border-radius:2px;margin-right:4px;vertical-align:middle"></span>有氧恢复</span>
-            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(96,165,250,.75);border-radius:2px;margin-right:4px;vertical-align:middle"></span>主动恢复</span>
-            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:2px;margin-right:4px;vertical-align:middle"></span>休息日</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(124,92,246,.8);border-radius:2px;margin-right:4px;vertical-align:middle"></span>力量训练</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(16,185,129,.75);border-radius:2px;margin-right:4px;vertical-align:middle"></span>有氧恢复</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(59,130,246,.75);border-radius:2px;margin-right:4px;vertical-align:middle"></span>主动恢复</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(0,0,0,.06);border:1px solid var(--border);border-radius:2px;margin-right:4px;vertical-align:middle"></span>休息日</span>
           </div>
           <div class="card-title" style="margin-bottom:8px">每日计划 — 点击展开 · ▶ 查看示范视频</div>
           <div class="ex-week-list" id="weeklyPlanList"></div>
@@ -565,12 +615,15 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
       </div>
 
 
-      <!-- AI Analysis -->
+      <!-- AI Analysis Entry -->
       <div class="card">
         <div class="card-title">AI 深度分析</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">基于近3个月 CGM、HbA1c、体重数据，由 Claude AI 生成个性化健康建议</p>
-        <button class="ai-btn" id="aiAnalysisBtn" onclick="getAiAnalysis()">✨ 获取 AI 分析建议</button>
-        <div class="ai-result" id="aiResult"></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">输入你想分析的方向，AI 将结合你的健康数据给出建议</p>
+        <textarea id="aiPromptInput" rows="3" placeholder="例如：分析我最近的血糖控制情况，给出饮食建议..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:13px;resize:none;font-family:inherit;line-height:1.6;margin-bottom:12px"></textarea>
+        <div style="display:flex;gap:8px">
+          <button class="ai-btn" style="flex:1" onclick="goAiAnalysis()">✨ 开始 AI 分析</button>
+          <button class="ai-btn" style="flex:1;background:var(--surface2);color:var(--text);border:1px solid var(--border)" onclick="goAiAnalysis('default')">📊 默认全面分析</button>
+        </div>
       </div>
 
     </div><!-- /dashboard -->
@@ -578,7 +631,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
     <!-- ═══ CGM PAGE ═══ -->
     <div id="page-cgm" class="page">
       <div class="page-head">
-        <h2>CGM 曲线 <span id="cgmYearBadge" style="font-size:13px;font-weight:500;color:var(--accent);background:rgba(139,92,246,.12);border-radius:8px;padding:3px 10px;margin-left:6px;vertical-align:middle"></span></h2>
+        <h2>CGM 曲线 <span id="cgmYearBadge" style="font-size:13px;font-weight:500;color:var(--accent);background:rgba(124,92,246,.12);border-radius:8px;padding:3px 10px;margin-left:6px;vertical-align:middle"></span></h2>
         <p>连续血糖监测趋势与时段分析</p>
       </div>
       <div class="card">
@@ -756,7 +809,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
       <!-- Risk guides -->
       <div class="risk-card danger">
         <div class="card-title" style="color:var(--red)">🚨 低血糖应急 — 15/15 原则</div>
-        <div style="font-size:13px;line-height:2;color:rgba(248,113,113,.85)">
+        <div style="font-size:13px;line-height:2;color:rgba(239,68,68,.85)">
           <strong>识别：</strong>心慌、手抖、出冷汗、饥饿感、CGM 报警 &lt;70<br>
           <strong>Step 1：</strong>立即补充 15g 快速碳水（4粒葡萄糖片 / 半杯果汁 / 1汤匙蜂蜜）<br>
           <strong>Step 2：</strong>等待 15分钟后复测<br>
@@ -767,7 +820,7 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 
       <div class="risk-card warn">
         <div class="card-title" style="color:var(--amber)">⚠️ 高血糖持续 (&gt;250 mg/dL)</div>
-        <div style="font-size:13px;line-height:1.9;color:rgba(251,191,36,.85)">
+        <div style="font-size:13px;line-height:1.9;color:rgba(245,158,11,.85)">
           <strong>信号：</strong>口干、多尿、极度疲乏，CGM 长时间 &gt;250<br>
           <strong>处理：</strong>大量补水 → 检查用药是否遗漏 → 伴恶心呕吐立即就医<br>
           <strong>警惕：</strong>酮症酸中毒 (DKA) — 速至急诊
@@ -797,6 +850,56 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
         <button class="btn btn-primary" onclick="openConfig()" style="width:100%;padding:13px">⚙️ 打开配置</button>
       </div>
     </div><!-- /more -->
+
+    <!-- ═══ AI ANALYSIS PAGE ═══ -->
+    <div id="page-ai" class="page">
+      <div class="ai-page-header">
+        <button class="ai-back-btn" onclick="showPage('dashboard',document.querySelector('.nav-tab'))">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <h2 style="font-size:17px;font-weight:700">AI 健康分析</h2>
+          <p style="font-size:11px;color:var(--muted);margin-top:2px" id="aiPageSubtitle">基于你的健康数据生成</p>
+        </div>
+      </div>
+
+      <!-- Prompt display -->
+      <div class="card" id="aiPagePromptCard">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:18px;flex-shrink:0;margin-top:2px">💬</span>
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600">分析指令</div>
+            <div id="aiPagePrompt" style="font-size:13px;line-height:1.6;color:var(--text)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data summary -->
+      <div class="card" id="aiPageDataCard" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:16px">📊</span>
+          <span style="font-size:13px;font-weight:600">数据摘要</span>
+          <span id="aiPageDataBadge" class="badge b-blue" style="margin-left:auto;font-size:10px"></span>
+        </div>
+        <div id="aiPageDataSummary" style="font-size:12px;color:var(--muted);line-height:1.8;white-space:pre-wrap"></div>
+      </div>
+
+      <!-- Analysis result -->
+      <div class="card" id="aiPageResultCard">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-size:16px">🤖</span>
+          <span style="font-size:13px;font-weight:600">AI 分析结果</span>
+          <span id="aiPageStatus" style="margin-left:auto;font-size:11px;color:var(--accent)"></span>
+        </div>
+        <div id="aiPageResult" class="ai-result" style="display:block;font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;min-height:60px"></div>
+      </div>
+
+      <!-- Actions -->
+      <div style="padding:0 16px 24px;display:flex;gap:8px">
+        <button class="btn btn-primary" id="aiPageRetryBtn" onclick="retryAiAnalysis()" style="flex:1;padding:13px" disabled>🔄 重新分析</button>
+        <button class="btn" onclick="showPage('dashboard',document.querySelector('.nav-tab'))" style="flex:1;padding:13px">← 返回首页</button>
+      </div>
+    </div><!-- /ai -->
 
   </main>
 
@@ -832,6 +935,32 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
 
 <div id="statusBar"></div>
 
+<!-- Agent Chat FAB -->
+<button id="agentFab" onclick="openAgent()">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
+
+<!-- Agent Chat Modal -->
+<div id="agentModal">
+  <div class="agent-header">
+    <h3>AI 健康助手</h3>
+    <button class="agent-close" onclick="closeAgent()">&times;</button>
+  </div>
+  <div class="agent-messages" id="agentMessages">
+    <div class="agent-msg assistant"><div class="md-text">你好！我是你的 AI 健康助手。我可以查询你的血糖数据、健康记录和用药情况，帮你分析健康趋势。
+
+试试问我：
+- 最近一周的血糖控制怎么样？
+- 我的 TIR 达标率是多少？
+- 帮我分析最近的体重变化趋势</div></div>
+  </div>
+  <div class="agent-typing" id="agentTyping"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:4px">思考中...</span></div>
+  <div class="agent-input-bar">
+    <textarea id="agentInput" placeholder="输入你的问题..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAgentMsg()}"></textarea>
+    <button class="agent-send" id="agentSendBtn" onclick="sendAgentMsg()">&#8593;</button>
+  </div>
+</div>
+
 <script>
 const APP_PW_KEY = 'dm_app_pw';
 const SUPABASE_URL_KEY = 'dm_sb_url';
@@ -839,6 +968,7 @@ const SUPABASE_KEY_KEY = 'dm_sb_key';
 const CLAUDE_KEY_KEY = 'dm_claude_key';
 const HEIGHT_KEY = 'dm_height_cm';
 const MEDS_KEY   = 'dm_medications';
+const OPENROUTER_KEY_KEY = 'dm_openrouter_key';
 
 const MED_DRUGS = {
   'GLP-1 受体激动剂': [
@@ -893,6 +1023,7 @@ function openConfig() {
   document.getElementById('cfgUrl').value = localStorage.getItem(SUPABASE_URL_KEY) || '';
   document.getElementById('cfgKey').value = localStorage.getItem(SUPABASE_KEY_KEY) || '';
   document.getElementById('cfgOpenaiKey').value = localStorage.getItem(CLAUDE_KEY_KEY) || '';
+  document.getElementById('cfgOpenrouterKey').value = localStorage.getItem(OPENROUTER_KEY_KEY) || '';
   document.getElementById('cfgHeight').value = localStorage.getItem(HEIGHT_KEY) || '';
   document.getElementById('configModal').classList.add('show');
 }
@@ -902,12 +1033,14 @@ function saveConfig() {
   const key = document.getElementById('cfgKey').value.trim();
   const pw = document.getElementById('cfgPw').value.trim();
   const openaiKey = document.getElementById('cfgOpenaiKey').value.trim();
+  const openrouterKey = document.getElementById('cfgOpenrouterKey').value.trim();
   const height = document.getElementById('cfgHeight').value.trim();
   if (!url || !key) { document.getElementById('cfgErr').textContent = 'URL 和 Key 必填'; return; }
   if (pw) localStorage.setItem(APP_PW_KEY, pw);
   localStorage.setItem(SUPABASE_URL_KEY, url);
   localStorage.setItem(SUPABASE_KEY_KEY, key);
   if (openaiKey) localStorage.setItem(CLAUDE_KEY_KEY, openaiKey);
+  if (openrouterKey) localStorage.setItem(OPENROUTER_KEY_KEY, openrouterKey);
   if (height) localStorage.setItem(HEIGHT_KEY, height);
   closeConfig(); initSupabase(); loadAllData();
   if (!localStorage.getItem(APP_PW_KEY)) { alert('请设置访问密码后刷新页面'); }
@@ -922,6 +1055,52 @@ function initSupabase() {
     document.getElementById('connStatus').textContent = '✓ 已连接';
     document.getElementById('connStatus').style.color = 'var(--green)';
   } catch(e) { document.getElementById('connStatus').textContent = '连接失败'; }
+}
+
+// ─── AI API helper (Anthropic / OpenRouter) ───
+function getAiProvider() {
+  const orKey = localStorage.getItem(OPENROUTER_KEY_KEY);
+  if (orKey) return { type:'openrouter', key:orKey };
+  const clKey = localStorage.getItem(CLAUDE_KEY_KEY);
+  if (clKey) return { type:'anthropic', key:clKey };
+  return null;
+}
+async function callAi({model, system, messages, max_tokens, stream, tools}) {
+  const provider = getAiProvider();
+  if (!provider) return null;
+  if (provider.type === 'openrouter') {
+    const orModel = model.startsWith('anthropic/') ? model : 'anthropic/' + model;
+    const msgs = [];
+    if (system) msgs.push({role:'system', content: system});
+    msgs.push(...messages);
+    const body = {model:orModel, messages:msgs, max_tokens, stream:!!stream};
+    if (tools && tools.length) body.tools = tools;
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+provider.key},
+      body:JSON.stringify(body)
+    });
+    return { res, format:'openai' };
+  }
+  // Anthropic direct
+  const body = {model, max_tokens, messages};
+  if (system) body.system = system;
+  if (stream) body.stream = true;
+  if (tools && tools.length) {
+    // Convert OpenAI tool format to Anthropic format
+    body.tools = tools.map(t => ({
+      name: t.function.name,
+      description: t.function.description,
+      input_schema: t.function.parameters || {type:'object',properties:{}}
+    }));
+  }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':provider.key,
+      'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)
+  });
+  return { res, format:'anthropic' };
 }
 
 // ─── Greeting ───
@@ -943,6 +1122,9 @@ function showPage(id, btn) {
   if (btn) btn.classList.add('active');
   if (id === 'cgm') renderCgmChart();
   if (id === 'history') { loadHistory(); renderHistChart('glucose'); }
+  // hide/show FAB on AI page
+  const fab = document.getElementById('agentFab');
+  if (id === 'ai') { fab.style.display = 'none'; } else if (!document.getElementById('agentModal').classList.contains('show')) { fab.style.display = 'flex'; }
 }
 
 // ─── Data loading ───
@@ -1001,9 +1183,9 @@ function renderRing(tirPct) {
 
   document.getElementById('ringScore').textContent = tirPct + '%';
 
-  const state = tirPct >= 90 ? { text:'优秀', col:'var(--green)', dot:'#34d399', pill:'优秀控糖 🎯' }
-    : tirPct >= 70 ? { text:'良好', col:'var(--amber)', dot:'#fbbf24', pill:'继续保持 💪' }
-    : { text:'需关注', col:'var(--red)', dot:'#f87171', pill:'请联系医生 ⚠️' };
+  const state = tirPct >= 90 ? { text:'优秀', col:'var(--green)', dot:'#10b981', pill:'优秀控糖 🎯' }
+    : tirPct >= 70 ? { text:'良好', col:'var(--amber)', dot:'#f59e0b', pill:'继续保持 💪' }
+    : { text:'需关注', col:'var(--red)', dot:'#ef4444', pill:'请联系医生 ⚠️' };
 
   document.getElementById('ringState').textContent = state.text;
   document.getElementById('ringState').style.color = state.col;
@@ -1163,7 +1345,7 @@ function renderBmiGauge(bmi) {
   const val = Math.round(bmi*10)/10;
   document.getElementById('bmiGaugeVal').textContent = val;
   const label = bmi<18.5?'偏瘦':bmi<25?'正常':bmi<30?'超重':'肥胖';
-  const hex = bmi<18.5?'#60a5fa':bmi<25?'#34d399':bmi<30?'#fbbf24':'#f87171';
+  const hex = bmi<18.5?'#3b82f6':bmi<25?'#10b981':bmi<30?'#f59e0b':'#ef4444';
   const varCol = bmi<18.5?'var(--blue)':bmi<25?'var(--green)':bmi<30?'var(--amber)':'var(--red)';
   document.getElementById('bmiGaugeVal').setAttribute('fill', hex);
   document.getElementById('d-bmi-label').textContent = 'BMI 分类: ' + label;
@@ -1225,15 +1407,15 @@ function renderMealChart(plan) {
     data: {
       labels: MEALS.map(m => m.name),
       datasets: [
-        { label:'蛋白质(g)', data:MEALS.map(m=>m.p),   backgroundColor:'rgba(139,92,246,.82)', borderRadius:{topLeft:4,topRight:4,bottomLeft:0,bottomRight:0}, stack:'m' },
-        { label:'脂肪(g)',   data:MEALS.map(m=>m.f),   backgroundColor:'rgba(251,191,36,.75)',  borderRadius:0, stack:'m' },
-        { label:'碳水(g)',   data:MEALS.map(m=>m.c),   backgroundColor:'rgba(96,165,250,.78)',  borderRadius:{topLeft:0,topRight:0,bottomLeft:4,bottomRight:4}, stack:'m' },
+        { label:'蛋白质(g)', data:MEALS.map(m=>m.p),   backgroundColor:'rgba(124,92,246,.82)', borderRadius:{topLeft:4,topRight:4,bottomLeft:0,bottomRight:0}, stack:'m' },
+        { label:'脂肪(g)',   data:MEALS.map(m=>m.f),   backgroundColor:'rgba(245,158,11,.75)',  borderRadius:0, stack:'m' },
+        { label:'碳水(g)',   data:MEALS.map(m=>m.c),   backgroundColor:'rgba(59,130,246,.78)',  borderRadius:{topLeft:0,topRight:0,bottomLeft:4,bottomRight:4}, stack:'m' },
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend: { display:true, position:'top', labels:{color:'#8892aa',font:{size:10},boxWidth:10,padding:14} },
+        legend: { display:true, position:'top', labels:{color:'#7c849b',font:{size:10},boxWidth:10,padding:14} },
         tooltip: { callbacks: {
           title: ctx => `${MEALS[ctx[0].dataIndex].name}  ${MEALS[ctx[0].dataIndex].time}`,
           afterTitle: ctx => `${MEALS[ctx[0].dataIndex].kcal} kcal`,
@@ -1241,8 +1423,8 @@ function renderMealChart(plan) {
         }}
       },
       scales: {
-        y: { stacked:true, ticks:{font:{size:10},color:'#6b7691',callback:v=>v+'g'}, grid:{color:'rgba(255,255,255,.04)'}, border:{display:false} },
-        x: { stacked:true, ticks:{font:{size:10},color:'#6b7691'}, grid:{display:false} }
+        y: { stacked:true, ticks:{font:{size:10},color:'#7c849b',callback:v=>v+'g'}, grid:{color:'rgba(0,0,0,.05)'}, border:{display:false} },
+        x: { stacked:true, ticks:{font:{size:10},color:'#7c849b'}, grid:{display:false} }
       }
     }
   });
@@ -1250,17 +1432,17 @@ function renderMealChart(plan) {
   // Macro summary strip
   const strip = `<div style="display:flex;gap:18px;padding:10px 2px 14px;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-      <span style="width:10px;height:10px;border-radius:2px;background:rgba(139,92,246,.82)"></span>
+      <span style="width:10px;height:10px;border-radius:2px;background:rgba(124,92,246,.82)"></span>
       <span style="color:var(--muted)">蛋白质</span><strong style="color:var(--text)">${totalP}g</strong>
       <span style="font-size:10px;color:var(--muted)">≈${totalP*4} kcal</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-      <span style="width:10px;height:10px;border-radius:2px;background:rgba(251,191,36,.75)"></span>
+      <span style="width:10px;height:10px;border-radius:2px;background:rgba(245,158,11,.75)"></span>
       <span style="color:var(--muted)">脂肪</span><strong style="color:var(--text)">${totalF}g</strong>
       <span style="font-size:10px;color:var(--muted)">≈${totalF*9} kcal</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;font-size:12px">
-      <span style="width:10px;height:10px;border-radius:2px;background:rgba(96,165,250,.78)"></span>
+      <span style="width:10px;height:10px;border-radius:2px;background:rgba(59,130,246,.78)"></span>
       <span style="color:var(--muted)">碳水</span><strong style="color:var(--text)">${totalC}g</strong>
       <span style="font-size:10px;color:var(--muted)">≈${totalC*4} kcal</span>
     </div>
@@ -1273,15 +1455,15 @@ function renderMealChart(plan) {
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:13px;font-weight:700;color:var(--text)">${m.name}</span>
           <span style="font-size:10px;color:var(--muted);background:var(--surface3);padding:2px 7px;border-radius:8px">${m.time}</span>
-          <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.05);color:${m.tagCol}">${m.tag}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.05);color:${m.tagCol}">${m.tag}</span>
         </div>
         <span style="font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0">${m.kcal} kcal</span>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:7px;line-height:1.6">${m.foods}</div>
       <div style="display:flex;gap:12px;font-size:11px;margin-bottom:${m.note?'8px':'0'}">
-        <span style="color:rgba(139,92,246,.9)">蛋白 ${m.p}g</span>
-        <span style="color:rgba(251,191,36,.9)">脂肪 ${m.f}g</span>
-        <span style="color:rgba(96,165,250,.9)">碳水 ${m.c}g</span>
+        <span style="color:rgba(124,92,246,.9)">蛋白 ${m.p}g</span>
+        <span style="color:rgba(245,158,11,.9)">脂肪 ${m.f}g</span>
+        <span style="color:rgba(59,130,246,.9)">碳水 ${m.c}g</span>
       </div>
       ${m.note?`<div style="font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:7px;line-height:1.6">${m.note}</div>`:''}
     </div>`).join('');
@@ -1352,10 +1534,10 @@ const WEEK_PLAN = [
 function renderExerciseChart() {
   const todayDow = new Date().getDay();
   const typeColor = {
-    strength:'rgba(139,92,246,.8)',
-    cardio:'rgba(52,211,153,.75)',
-    yoga:'rgba(96,165,250,.75)',
-    rest:'rgba(255,255,255,.06)'
+    strength:'rgba(124,92,246,.8)',
+    cardio:'rgba(16,185,129,.75)',
+    yoga:'rgba(59,130,246,.75)',
+    rest:'rgba(0,0,0,.06)'
   };
 
   if (exerciseChart) exerciseChart.destroy();
@@ -1375,8 +1557,8 @@ function renderExerciseChart() {
         }}}
       },
       scales:{
-        y:{max:50,ticks:{font:{size:10},color:'#6b7691',callback:v=>v?v+'分':''},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-        x:{ticks:{font:{size:11},color:'#6b7691'},grid:{display:false}}
+        y:{max:50,ticks:{font:{size:10},color:'#7c849b',callback:v=>v?v+'分':''},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{font:{size:11},color:'#7c849b'},grid:{display:false}}
       }
     }
   });
@@ -1384,7 +1566,7 @@ function renderExerciseChart() {
   // Render weekly plan list
   const list = document.getElementById('weeklyPlanList');
   if (!list) return;
-  const badgeBg = {strength:'rgba(139,92,246,.15)',cardio:'rgba(52,211,153,.12)',yoga:'rgba(96,165,250,.12)',rest:'rgba(255,255,255,.05)'};
+  const badgeBg = {strength:'rgba(124,92,246,.15)',cardio:'rgba(16,185,129,.12)',yoga:'rgba(59,130,246,.12)',rest:'rgba(0,0,0,.05)'};
 
   list.innerHTML = WEEK_PLAN.map((day, idx) => {
     const isToday = day.dow === todayDow;
@@ -1444,8 +1626,7 @@ function updateExerciseFocus(text) {
 }
 
 async function loadAiNutritionPlan(snap) {
-  const apiKey = localStorage.getItem(CLAUDE_KEY_KEY);
-  if (!apiKey) return null;
+  if (!getAiProvider()) return null;
   const prompt = `你是糖尿病营养顾问。根据以下健康数据输出今日营养方案，仅返回一行JSON，不含任何说明文字：
 体重${snap.weightKg.toFixed(0)}kg 身高${snap.heightCm}cm BMI${snap.bmi.toFixed(1)} 基础热量预算${snap.kcalBase}kcal
 CGM均值${snap.avg||'未知'}mg/dL TIR${snap.tir||'未知'}% 标准差${snap.sd||'未知'}
@@ -1453,16 +1634,13 @@ HbA1c:${snap.hba1c||'未知'}% 用药:${snap.meds}
 目标：血糖控制+健康减重+保护肌肉，蛋白质优先，控制精制碳水。
 {"kcal":number,"proteinG":number,"fatG":number,"carbG":number,"mealNote":"膳食重点≤25字","exerciseFocus":"运动重点≤35字"}`;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,
-        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:130,
-        messages:[{role:'user',content:prompt}]})
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const text = (data.content?.[0]?.text||'').trim();
+    const r = await callAi({model:'claude-haiku-4-5-20251001',max_tokens:130,
+      messages:[{role:'user',content:prompt}]});
+    if (!r || !r.res.ok) return null;
+    const data = await r.res.json();
+    const text = (r.format==='openai'
+      ? (data.choices?.[0]?.message?.content||'')
+      : (data.content?.[0]?.text||'')).trim();
     // extract JSON from response (handle any surrounding text)
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return null;
@@ -1515,17 +1693,17 @@ function renderDashboard() {
       data:{
         labels:h24.map(d=>new Date(d.device_timestamp).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})),
         datasets:[
-          {label:'血糖',data:h24.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#34d399',
-            backgroundColor:'rgba(52,211,153,.07)',tension:.4,pointRadius:0,borderWidth:2,fill:true},
-          {label:'低',data:Array(h24.length).fill(70),borderColor:'rgba(248,113,113,.4)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
-          {label:'高',data:Array(h24.length).fill(180),borderColor:'rgba(251,191,36,.4)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
+          {label:'血糖',data:h24.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#10b981',
+            backgroundColor:'rgba(16,185,129,.07)',tension:.4,pointRadius:0,borderWidth:2,fill:true},
+          {label:'低',data:Array(h24.length).fill(70),borderColor:'rgba(239,68,68,.4)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
+          {label:'高',data:Array(h24.length).fill(180),borderColor:'rgba(245,158,11,.4)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
         ]
       },
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false}},
         scales:{
-          y:{min:60,max:220,ticks:{font:{size:10},color:'#6b7691'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-          x:{ticks:{maxTicksLimit:6,font:{size:10},color:'#6b7691'},grid:{display:false}}
+          y:{min:60,max:220,ticks:{font:{size:10},color:'#7c849b'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+          x:{ticks:{maxTicksLimit:6,font:{size:10},color:'#7c849b'},grid:{display:false}}
         }
       }
     });
@@ -1641,17 +1819,17 @@ async function renderCgmChart() {
     data:{
       labels:ds.map(d=>new Date(d.device_timestamp).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})),
       datasets:[
-        {label:'血糖',data:ds.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#8b5cf6',
-          backgroundColor:'rgba(139,92,246,.06)',tension:.3,pointRadius:0,borderWidth:1.5,fill:true},
-        {label:'低',data:Array(ds.length).fill(70),borderColor:'rgba(248,113,113,.45)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
-        {label:'高',data:Array(ds.length).fill(180),borderColor:'rgba(251,191,36,.45)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
+        {label:'血糖',data:ds.map(d=>Math.round(d.glucose_mg_dl)),borderColor:'#7c5cf6',
+          backgroundColor:'rgba(124,92,246,.06)',tension:.3,pointRadius:0,borderWidth:1.5,fill:true},
+        {label:'低',data:Array(ds.length).fill(70),borderColor:'rgba(239,68,68,.45)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false},
+        {label:'高',data:Array(ds.length).fill(180),borderColor:'rgba(245,158,11,.45)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}
       ]
     },
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false}},
       scales:{
-        y:{min:60,max:250,ticks:{font:{size:10},color:'#6b7691'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-        x:{ticks:{maxTicksLimit:8,font:{size:10},color:'#6b7691'},grid:{display:false}}
+        y:{min:60,max:250,ticks:{font:{size:10},color:'#7c849b'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{maxTicksLimit:8,font:{size:10},color:'#7c849b'},grid:{display:false}}
       }
     }
   });
@@ -1666,14 +1844,14 @@ async function renderCgmChart() {
     data:{
       labels:Array.from({length:24},(_,i)=>i+':00'),
       datasets:[{label:'均值血糖',data:hourly,
-        backgroundColor:hourly.map(v=>!v?'transparent':v<70?'rgba(248,113,113,.6)':v>180?'rgba(251,191,36,.6)':'rgba(52,211,153,.6)'),
+        backgroundColor:hourly.map(v=>!v?'transparent':v<70?'rgba(239,68,68,.6)':v>180?'rgba(245,158,11,.6)':'rgba(16,185,129,.6)'),
         borderRadius:5}]
     },
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false}},
       scales:{
-        y:{min:60,max:220,ticks:{font:{size:10},color:'#6b7691'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-        x:{ticks:{maxTicksLimit:12,font:{size:10},color:'#6b7691'},grid:{display:false}}
+        y:{min:60,max:220,ticks:{font:{size:10},color:'#7c849b'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{maxTicksLimit:12,font:{size:10},color:'#7c849b'},grid:{display:false}}
       }
     }
   });
@@ -1810,20 +1988,20 @@ function renderHistChart(tab){
   const labels=data.map(r=>r.record_date.slice(5));
   let datasets=[];
   if(tab==='glucose'){datasets=[
-    {label:'空腹血糖',data:data.map(r=>r.fasting_glucose),borderColor:'#8b5cf6',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#8b5cf6'},
-    {label:'餐后血糖',data:data.map(r=>r.post_meal_glucose),borderColor:'#34d399',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#34d399'}
+    {label:'空腹血糖',data:data.map(r=>r.fasting_glucose),borderColor:'#7c5cf6',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#7c5cf6'},
+    {label:'餐后血糖',data:data.map(r=>r.post_meal_glucose),borderColor:'#10b981',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#10b981'}
   ];}else if(tab==='bp'){datasets=[
-    {label:'收缩压',data:data.map(r=>r.systolic_bp),borderColor:'#f87171',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#f87171'},
-    {label:'舒张压',data:data.map(r=>r.diastolic_bp),borderColor:'#fbbf24',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#fbbf24'}
-  ];}else{datasets=[{label:'体重 (lbs)',data:data.map(r=>r.weight_lbs),borderColor:'#8b5cf6',tension:.4,pointRadius:3,borderWidth:2,fill:true,backgroundColor:'rgba(139,92,246,.07)',pointBackgroundColor:'#8b5cf6'}];}
+    {label:'收缩压',data:data.map(r=>r.systolic_bp),borderColor:'#ef4444',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#ef4444'},
+    {label:'舒张压',data:data.map(r=>r.diastolic_bp),borderColor:'#f59e0b',tension:.4,pointRadius:3,borderWidth:2,pointBackgroundColor:'#f59e0b'}
+  ];}else{datasets=[{label:'体重 (lbs)',data:data.map(r=>r.weight_lbs),borderColor:'#7c5cf6',tension:.4,pointRadius:3,borderWidth:2,fill:true,backgroundColor:'rgba(124,92,246,.07)',pointBackgroundColor:'#7c5cf6'}];}
   if(histChart)histChart.destroy();
   histChart=new Chart(document.getElementById('histChart'),{
     type:'line',data:{labels,datasets},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{font:{size:11},padding:14,color:'#6b7691'}}},
+      plugins:{legend:{labels:{font:{size:11},padding:14,color:'#7c849b'}}},
       scales:{
-        y:{ticks:{font:{size:10},color:'#6b7691'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-        x:{ticks:{font:{size:10},color:'#6b7691',maxTicksLimit:10},grid:{display:false}}
+        y:{ticks:{font:{size:10},color:'#7c849b'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'#7c849b',maxTicksLimit:10},grid:{display:false}}
       }
     }
   });
@@ -1950,10 +2128,10 @@ function renderMedDashTab() {
 
 // ─── AI Analysis ───
 async function getAiAnalysis(){
-  const apiKey=localStorage.getItem(CLAUDE_KEY_KEY);
+  const provider=getAiProvider();
   const btn=document.getElementById('aiAnalysisBtn');
   const result=document.getElementById('aiResult');
-  if(!apiKey){result.textContent='请先在 ⚙️ 配置 中填写 Claude API Key。';result.classList.add('show');return;}
+  if(!provider){result.textContent='请先在 ⚙️ 配置 中填写 Claude API Key 或 OpenRouter API Key。';result.classList.add('show');return;}
   const now=Date.now(), ago90=now-90*24*3600000;
   const recent=cgmData.filter(r=>new Date(r.device_timestamp).getTime()>=ago90);
   function cgmStats(arr){
@@ -1996,27 +2174,275 @@ async function getAiAnalysis(){
   if(!dataBlock){result.textContent='暂无足够数据，请先导入 CGM 数据或添加日常记录。';result.classList.add('show');return;}
   btn.disabled=true; btn.innerHTML='<span class="ai-spinner"></span>AI 分析中...';
   result.textContent=''; result.classList.add('show');
+  const sysPrompt='你是一位专业的糖尿病健康顾问。请根据用户提供的近三个月健康数据（含用药情况），用中文给出清晰详细的分析建议。分析必须包含以下四个部分：\n①数据解读：解读近三个月血糖趋势、HbA1c、体重等各项指标变化，并结合当前用药分析控糖效果\n②风险提示：指出当前数据和用药方案中存在的潜在健康风险（如低血糖风险、药物副作用关注点等）\n③饮食/运动建议：结合数据和用药给出具体可行的建议（例如 GLP-1 用药期间的饮食要点）\n④下次就诊关注点：列出下次看诊时需要重点讨论的问题，包括用药调整建议\n\n最后注明：本分析仅供参考，不构成医疗诊断，请遵医嘱。';
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-opus-4-6',max_tokens:1500,stream:true,
-        system:'你是一位专业的糖尿病健康顾问。请根据用户提供的近三个月健康数据（含用药情况），用中文给出清晰详细的分析建议。分析必须包含以下四个部分：\n①数据解读：解读近三个月血糖趋势、HbA1c、体重等各项指标变化，并结合当前用药分析控糖效果\n②风险提示：指出当前数据和用药方案中存在的潜在健康风险（如低血糖风险、药物副作用关注点等）\n③饮食/运动建议：结合数据和用药给出具体可行的建议（例如 GLP-1 用药期间的饮食要点）\n④下次就诊关注点：列出下次看诊时需要重点讨论的问题，包括用药调整建议\n\n最后注明：本分析仅供参考，不构成医疗诊断，请遵医嘱。',
-        messages:[{role:'user',content:`以下是我近三个月的糖尿病健康数据，请帮我全面分析：\n\n${dataBlock}`}]})
-    });
-    if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${resp.status}`);}
-    const reader=resp.body.getReader(),decoder=new TextDecoder();let buf='';
+    const r=await callAi({model:'claude-opus-4-6',max_tokens:1500,stream:true,
+      system:sysPrompt,
+      messages:[{role:'user',content:`以下是我近三个月的糖尿病健康数据，请帮我全面分析：\n\n${dataBlock}`}]});
+    if(!r||!r.res.ok){const e=await r?.res?.json().catch(()=>({}));throw new Error(e?.error?.message||`HTTP ${r?.res?.status}`);}
+    const reader=r.res.body.getReader(),decoder=new TextDecoder();let buf='';
+    const isOpenAi=r.format==='openai';
     while(true){
       const{done,value}=await reader.read();if(done)break;
       buf+=decoder.decode(value,{stream:true});
       const lines=buf.split('\n');buf=lines.pop();
       for(const line of lines){
         if(!line.startsWith('data: '))continue;
-        try{const c=JSON.parse(line.slice(6).trim());if(c.type==='content_block_delta'&&c.delta?.type==='text_delta')result.textContent+=c.delta.text;}catch{}
+        const payload=line.slice(6).trim();
+        if(payload==='[DONE]')continue;
+        try{
+          const c=JSON.parse(payload);
+          if(isOpenAi){const t=c.choices?.[0]?.delta?.content;if(t)result.textContent+=t;}
+          else{if(c.type==='content_block_delta'&&c.delta?.type==='text_delta')result.textContent+=c.delta.text;}
+        }catch{}
       }
     }
-  }catch(e){result.textContent=`请求失败：${e.message}\n\n请检查 Claude API Key 是否正确。`;}
+  }catch(e){result.textContent=`请求失败：${e.message}\n\n请检查 API Key 是否正确。`;}
   finally{btn.disabled=false;btn.innerHTML='✨ 重新分析';}
+}
+
+// ─── Agent Chat ───
+const AGENT_TOOLS = [
+  {type:'function', function:{
+    name:'query_cgm_readings',
+    description:'查询连续血糖监测(CGM)数据，返回 device_timestamp 和 glucose_mg_dl 字段。可按日期范围筛选。',
+    parameters:{type:'object', properties:{
+      from_date:{type:'string',description:'开始日期 YYYY-MM-DD（含）'},
+      to_date:{type:'string',description:'结束日期 YYYY-MM-DD（含）'},
+      limit:{type:'number',description:'返回记录数上限，默认500'}
+    }}
+  }},
+  {type:'function', function:{
+    name:'query_daily_records',
+    description:'查询每日健康记录，包含 record_date, fasting_glucose, post_meal_glucose, systolic_bp, diastolic_bp, weight_lbs, hba1c, notes 字段。',
+    parameters:{type:'object', properties:{
+      from_date:{type:'string',description:'开始日期 YYYY-MM-DD（含）'},
+      to_date:{type:'string',description:'结束日期 YYYY-MM-DD（含）'},
+      limit:{type:'number',description:'返回记录数上限，默认60'}
+    }}
+  }},
+  {type:'function', function:{
+    name:'get_medications',
+    description:'获取当前正在使用的药物列表，包含类别(cat)、药物名(drug)、剂量(dose)、开始日期(startDate)。',
+    parameters:{type:'object', properties:{}}
+  }},
+  {type:'function', function:{
+    name:'compute_cgm_stats',
+    description:'计算指定日期范围内的 CGM 统计：TIR 达标率(70-180)、低血糖比例(<70)、高血糖比例(>180)、均值、最高、最低、标准差、数据点数。',
+    parameters:{type:'object', properties:{
+      from_date:{type:'string',description:'开始日期 YYYY-MM-DD'},
+      to_date:{type:'string',description:'结束日期 YYYY-MM-DD'}
+    }}
+  }}
+];
+
+async function execTool(name, args) {
+  if (!sb) return {error:'Supabase 未连接'};
+  try {
+    if (name === 'query_cgm_readings') {
+      let q = sb.from('cgm_readings').select('device_timestamp,glucose_mg_dl')
+        .not('glucose_mg_dl','is',null).order('device_timestamp',{ascending:false}).limit(args.limit||500);
+      if (args.from_date) q = q.gte('device_timestamp', args.from_date);
+      if (args.to_date) q = q.lte('device_timestamp', args.to_date+'T23:59:59');
+      const {data,error} = await q;
+      if (error) return {error:error.message};
+      return {count:data.length, readings:data.reverse()};
+    }
+    if (name === 'query_daily_records') {
+      let q = sb.from('daily_records').select('*').order('record_date',{ascending:false}).limit(args.limit||60);
+      if (args.from_date) q = q.gte('record_date', args.from_date);
+      if (args.to_date) q = q.lte('record_date', args.to_date);
+      const {data,error} = await q;
+      if (error) return {error:error.message};
+      return {count:data.length, records:data};
+    }
+    if (name === 'get_medications') {
+      return {medications: getActiveMeds()};
+    }
+    if (name === 'compute_cgm_stats') {
+      let q = sb.from('cgm_readings').select('glucose_mg_dl')
+        .not('glucose_mg_dl','is',null);
+      if (args.from_date) q = q.gte('device_timestamp', args.from_date);
+      if (args.to_date) q = q.lte('device_timestamp', args.to_date+'T23:59:59');
+      const {data,error} = await q;
+      if (error) return {error:error.message};
+      if (!data||!data.length) return {error:'该时间段无数据'};
+      const vals = data.map(d=>d.glucose_mg_dl);
+      const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const sd = Math.sqrt(vals.reduce((s,v)=>s+(v-avg)**2,0)/vals.length);
+      const inRange = vals.filter(v=>v>=70&&v<=180).length;
+      const low = vals.filter(v=>v<70).length;
+      const high = vals.filter(v=>v>180).length;
+      return {
+        count:vals.length, avg:Math.round(avg*10)/10, sd:Math.round(sd*10)/10,
+        tir:Math.round(inRange/vals.length*100*10)/10,
+        low_pct:Math.round(low/vals.length*100*10)/10,
+        high_pct:Math.round(high/vals.length*100*10)/10,
+        min:Math.min(...vals), max:Math.max(...vals)
+      };
+    }
+    return {error:'未知工具: '+name};
+  } catch(e) { return {error:e.message}; }
+}
+
+let agentHistory = [];
+let agentBusy = false;
+
+function openAgent() {
+  document.getElementById('agentModal').classList.add('show');
+  document.getElementById('agentFab').style.display = 'none';
+  document.getElementById('agentInput').focus();
+}
+function closeAgent() {
+  document.getElementById('agentModal').classList.remove('show');
+  document.getElementById('agentFab').style.display = 'flex';
+}
+
+function appendAgentMsg(role, text) {
+  const container = document.getElementById('agentMessages');
+  const div = document.createElement('div');
+  div.className = 'agent-msg ' + role;
+  if (role === 'assistant') {
+    div.innerHTML = '<div class="md-text"></div>';
+    div.querySelector('.md-text').textContent = text;
+  } else {
+    div.textContent = text;
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function setAgentTyping(show, text) {
+  const el = document.getElementById('agentTyping');
+  el.classList.toggle('show', show);
+  if (text) el.querySelector('span:last-child').textContent = text;
+}
+
+async function sendAgentMsg() {
+  if (agentBusy) return;
+  const input = document.getElementById('agentInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  if (!getAiProvider()) {
+    appendAgentMsg('assistant', '请先在 ⚙️ 配置 中填写 OpenRouter 或 Claude API Key。');
+    return;
+  }
+
+  appendAgentMsg('user', text);
+  agentHistory.push({role:'user', content:text});
+  agentBusy = true;
+  document.getElementById('agentSendBtn').disabled = true;
+
+  try {
+    await agentLoop();
+  } catch(e) {
+    appendAgentMsg('assistant', '请求失败：' + e.message);
+  }
+  agentBusy = false;
+  document.getElementById('agentSendBtn').disabled = false;
+  setAgentTyping(false);
+}
+
+const AGENT_SYSTEM = `你是一位专业的糖尿病健康数据助手。你可以通过工具查询用户的 CGM 血糖数据、每日健康记录和用药信息。
+
+工作方式：
+1. 理解用户的问题，决定需要查询哪些数据
+2. 调用工具获取数据
+3. 根据数据给出清晰的分析和建议
+
+注意事项：
+- 今天的日期是 ${new Date().toISOString().slice(0,10)}
+- 血糖单位为 mg/dL，正常范围 70-180
+- TIR (Time in Range) 是指血糖在 70-180 范围内的时间比例
+- 回答用中文，简洁明了
+- 给出具体的数字和趋势分析
+- 如果数据不足，说明需要更多数据
+- 最后注明：本分析仅供参考，不构成医疗诊断，请遵医嘱`;
+
+async function agentLoop() {
+  const MAX_ROUNDS = 6;
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    setAgentTyping(true, round === 0 ? '思考中...' : '分析数据...');
+    const r = await callAi({
+      model:'claude-sonnet-4-6',
+      system: AGENT_SYSTEM,
+      messages: agentHistory,
+      max_tokens: 1500,
+      tools: AGENT_TOOLS
+    });
+    if (!r || !r.res.ok) {
+      const err = await r?.res?.json().catch(()=>({}));
+      throw new Error(err?.error?.message || `HTTP ${r?.res?.status}`);
+    }
+    const data = await r.res.json();
+
+    if (r.format === 'openai') {
+      const choice = data.choices?.[0];
+      if (!choice) throw new Error('空响应');
+      const msg = choice.message;
+
+      // Check for tool calls
+      if (msg.tool_calls && msg.tool_calls.length) {
+        // Add assistant message with tool_calls to history
+        agentHistory.push({role:'assistant', content:msg.content||null, tool_calls:msg.tool_calls});
+
+        for (const tc of msg.tool_calls) {
+          const fnName = tc.function.name;
+          const fnArgs = JSON.parse(tc.function.arguments || '{}');
+          setAgentTyping(true, '查询 ' + fnName.replace('_',' ') + '...');
+          appendAgentMsg('tool', '🔧 ' + fnName + '(' + JSON.stringify(fnArgs) + ')');
+          const result = await execTool(fnName, fnArgs);
+          const resultStr = JSON.stringify(result);
+          // Add tool result to history
+          agentHistory.push({role:'tool', tool_call_id:tc.id, content:resultStr});
+          appendAgentMsg('tool', '📊 返回 ' + (result.count !== undefined ? result.count + ' 条数据' : resultStr.slice(0,200)));
+        }
+        continue; // next round
+      }
+
+      // Final text response
+      const text = msg.content || '';
+      if (text) {
+        agentHistory.push({role:'assistant', content:text});
+        appendAgentMsg('assistant', text);
+      }
+      setAgentTyping(false);
+      return;
+
+    } else {
+      // Anthropic format
+      const contents = data.content || [];
+      const toolUses = contents.filter(c => c.type === 'tool_use');
+      const textParts = contents.filter(c => c.type === 'text').map(c => c.text).join('');
+
+      if (toolUses.length) {
+        agentHistory.push({role:'assistant', content:contents});
+
+        for (const tu of toolUses) {
+          setAgentTyping(true, '查询 ' + tu.name.replace('_',' ') + '...');
+          appendAgentMsg('tool', '🔧 ' + tu.name + '(' + JSON.stringify(tu.input) + ')');
+          const result = await execTool(tu.name, tu.input);
+          const resultStr = JSON.stringify(result);
+          agentHistory.push({role:'user', content:[{type:'tool_result', tool_use_id:tu.id, content:resultStr}]});
+          appendAgentMsg('tool', '📊 返回 ' + (result.count !== undefined ? result.count + ' 条数据' : resultStr.slice(0,200)));
+        }
+        continue;
+      }
+
+      if (textParts) {
+        agentHistory.push({role:'assistant', content:textParts});
+        appendAgentMsg('assistant', textParts);
+      }
+      setAgentTyping(false);
+      return;
+    }
+  }
+  appendAgentMsg('assistant', '已达到最大查询轮次，请尝试更具体的问题。');
+  setAgentTyping(false);
 }
 
 // ─── Status bar ───
