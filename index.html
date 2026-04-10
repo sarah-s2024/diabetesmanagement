@@ -919,10 +919,10 @@ function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi) {
   }
 
   document.getElementById('contribScroll').innerHTML = cards.map(c => `
-    <div class="contrib-card">
+    <div class="contrib-card" title="${c.tooltip||''}">
       <div class="contrib-icon">${c.icon}</div>
       <div class="contrib-val" style="color:${c.col}">${c.val}</div>
-      <div class="contrib-name">${c.name}${c.unit?'<br><span style="font-size:9px;color:var(--muted2)">'+c.unit+'</span>':''}</div>
+      <div class="contrib-name">${c.name}${c.unit?'<br><span style="font-size:9px;color:var(--muted2)">'+c.unit+'</span>':c.tooltip?'<br><span style="font-size:9px;color:var(--muted2)">CGM 估算</span>':''}</div>
       ${c.st ? `<div class="contrib-status"><span class="c-dot" style="background:${c.col}"></span><span style="color:${c.col}">${c.st}</span></div>` : ''}
     </div>`).join('');
 }
