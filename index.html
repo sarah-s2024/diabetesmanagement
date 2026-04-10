@@ -1073,32 +1073,142 @@ function renderMealChart(totalKcal) {
 }
 
 // ─── Exercise plan ───
+const WEEK_PLAN = [
+  { dow:1, name:'周一', type:'strength', icon:'🏋️', label:'上肢力量训练', duration:35, intensity:'中等',
+    desc:'保护骨密度，增强上肢推拉能力',
+    exercises:[
+      {name:'热身',       detail:'关节绕环 + 轻有氧 · 5分钟', yt:'热身运动教程'},
+      {name:'哑铃推举',   detail:'3×10次',                    yt:'哑铃推举教程'},
+      {name:'弹力带划船', detail:'3×12次',                    yt:'弹力带划船教程'},
+      {name:'俯卧撑',     detail:'膝盖着地可以 · 3×8–10次',  yt:'俯卧撑教程'},
+      {name:'哑铃弯举',   detail:'3×10次',                    yt:'哑铃弯举教程'},
+      {name:'农夫行走',   detail:'3×20米',                    yt:'农夫行走教程'},
+      {name:'拉伸放松',   detail:'5分钟',                     yt:'上肢拉伸教程'},
+    ]},
+  { dow:2, name:'周二', type:'cardio', icon:'🚶', label:'快走 / 骑行', duration:35, intensity:'中低',
+    desc:'心率控制 100–115 bpm，目标 6,000–7,000 步',
+    exercises:[
+      {name:'快走',          detail:'30分钟 · 心率100–115 bpm', yt:'快走技巧教程'},
+      {name:'户外骑行（可选）', detail:'20–30分钟',               yt:'有氧骑行教程'},
+    ]},
+  { dow:3, name:'周三', type:'strength', icon:'🏋️', label:'下肢力量训练', duration:35, intensity:'中等',
+    desc:'骨密度关键训练，强化下肢',
+    exercises:[
+      {name:'热身',        detail:'5分钟',              yt:'热身运动教程'},
+      {name:'杯状深蹲',    detail:'3×10次',             yt:'深蹲教程'},
+      {name:'弓步行走',    detail:'3×8次/每侧',         yt:'弓步行走教程'},
+      {name:'罗马尼亚硬拉',detail:'3×10次',             yt:'罗马尼亚硬拉教程'},
+      {name:'靠墙静蹲',    detail:'3×30秒',             yt:'靠墙静蹲教程'},
+      {name:'站立提踵',    detail:'3×15次',             yt:'提踵训练教程'},
+      {name:'拉伸放松',    detail:'5分钟',              yt:'下肢拉伸教程'},
+    ]},
+  { dow:4, name:'周四', type:'cardio', icon:'🚶', label:'快走 + 拉伸', duration:30, intensity:'中低',
+    desc:'恢复日，关注灵活性和肌肉放松',
+    exercises:[
+      {name:'快走',       detail:'25–30分钟',     yt:'快走技巧教程'},
+      {name:'全身拉伸',   detail:'10分钟',         yt:'全身拉伸教程'},
+      {name:'泡沫轴放松', detail:'针对酸痛部位',   yt:'泡沫轴放松教程'},
+    ]},
+  { dow:5, name:'周五', type:'strength', icon:'🏋️', label:'全身功能训练', duration:35, intensity:'中等',
+    desc:'功能性动作，提升整体运动能力',
+    exercises:[
+      {name:'壶铃摆荡',     detail:'3×12次',      yt:'壶铃摆荡教程'},
+      {name:'弹力带训练',   detail:'3×10次',      yt:'弹力带训练教程'},
+      {name:'平板支撑',     detail:'3×20–30秒',   yt:'平板支撑教程'},
+      {name:'侧平板',       detail:'2×15秒/每侧', yt:'侧平板支撑教程'},
+      {name:'哑铃负重登阶', detail:'3×8次/每侧',  yt:'登阶训练教程'},
+      {name:'拉伸放松',     detail:'5分钟',       yt:'拉伸放松教程'},
+    ]},
+  { dow:6, name:'周六', type:'yoga', icon:'🧘', label:'瑜伽 / 太极 / 散步', duration:30, intensity:'低',
+    desc:'主动恢复，有助于平衡和骨骼健康',
+    exercises:[
+      {name:'瑜伽',            detail:'30分钟',      yt:'初学者瑜伽教程'},
+      {name:'太极（可选）',     detail:'30分钟',      yt:'太极拳入门教程'},
+      {name:'轻松散步（可选）', detail:'20–30分钟',   yt:''},
+    ]},
+  { dow:0, name:'周日', type:'rest', icon:'🛌', label:'完全休息', duration:0, intensity:'—',
+    desc:'充分休息，让肌肉和神经系统恢复',
+    exercises:[]},
+];
+
 function renderExerciseChart() {
   const todayDow = new Date().getDay();
-  const exerciseDays = new Set([1,2,4,5,6]);
-  const weekOrder = [1,2,3,4,5,6,0];
-  const dayNames = ['日','一','二','三','四','五','六'];
-  const durations = weekOrder.map(d => exerciseDays.has(d) ? 45 : 0);
-  const colors = weekOrder.map(d => {
-    if (!exerciseDays.has(d)) return 'rgba(255,255,255,.05)';
-    return (todayDow - d + 7) % 7 > 0 ? 'rgba(52,211,153,.7)' : 'rgba(139,92,246,.75)';
-  });
+  const typeColor = {
+    strength:'rgba(139,92,246,.8)',
+    cardio:'rgba(52,211,153,.75)',
+    yoga:'rgba(96,165,250,.75)',
+    rest:'rgba(255,255,255,.06)'
+  };
+
   if (exerciseChart) exerciseChart.destroy();
-  exerciseChart = new Chart(document.getElementById('exerciseChart'),{
+  exerciseChart = new Chart(document.getElementById('exerciseChart'), {
     type:'bar',
     data:{
-      labels: weekOrder.map(d=>'周'+dayNames[d]),
-      datasets:[{data:durations.map(d=>d||8),backgroundColor:colors,borderRadius:10,barPercentage:.65}]
+      labels: WEEK_PLAN.map(d=>d.name),
+      datasets:[{ data:WEEK_PLAN.map(d=>d.duration||8), backgroundColor:WEEK_PLAN.map(d=>typeColor[d.type]), borderRadius:10, barPercentage:.65 }]
     },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>exerciseDays.has(weekOrder[ctx.dataIndex])?'Zone 2 有氧 45 分钟':'休息日'}}},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          const d=WEEK_PLAN[ctx.dataIndex];
+          return d.type==='rest'?'🛌 休息日':`${d.icon} ${d.label} · ${d.duration}分钟`;
+        }}}
+      },
       scales:{
-        y:{max:60,ticks:{font:{size:10},color:'#6b7691',callback:v=>v?v+'分':''},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+        y:{max:50,ticks:{font:{size:10},color:'#6b7691',callback:v=>v?v+'分':''},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
         x:{ticks:{font:{size:11},color:'#6b7691'},grid:{display:false}}
       }
     }
   });
+
+  // Render weekly plan list
+  const list = document.getElementById('weeklyPlanList');
+  if (!list) return;
+  const badgeBg = {strength:'rgba(139,92,246,.15)',cardio:'rgba(52,211,153,.12)',yoga:'rgba(96,165,250,.12)',rest:'rgba(255,255,255,.05)'};
+
+  list.innerHTML = WEEK_PLAN.map((day, idx) => {
+    const isToday = day.dow === todayDow;
+    const exItems = day.exercises.map(ex => {
+      const ytLink = ex.yt
+        ? `<a class="ex-yt" href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex.yt)}" target="_blank" rel="noopener">▶ 示范</a>`
+        : '';
+      return `<div class="ex-item">
+        <div><div class="ex-item-name">${ex.name}</div><div class="ex-item-detail">${ex.detail}</div></div>
+        ${ytLink}
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="ex-day-row" onclick="toggleExDay(${idx})">
+        <div class="ex-badge" style="background:${badgeBg[day.type]}">${day.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div class="ex-day-name">${day.name}${isToday?` <span class="ex-today">今日</span>`:''}</div>
+          <div class="ex-day-label">${day.label}${day.intensity!=='—'?' · '+day.intensity:''}</div>
+        </div>
+        <div class="ex-dur">${day.duration?day.duration+'分':'—'}</div>
+        ${day.exercises.length?`<div class="ex-chevron" id="chev-${idx}">›</div>`:''}
+      </div>
+      ${day.exercises.length?`<div class="ex-detail" id="exd-${idx}">
+        <div class="ex-desc">${day.desc}</div>
+        ${exItems}
+      </div>`:''}`;
+  }).join('');
+
+  // Auto-expand today
+  const todayIdx = WEEK_PLAN.findIndex(d => d.dow === todayDow);
+  if (todayIdx >= 0 && WEEK_PLAN[todayIdx].exercises.length) {
+    setTimeout(() => toggleExDay(todayIdx), 80);
+  }
+}
+
+function toggleExDay(idx) {
+  const detail = document.getElementById('exd-'+idx);
+  const chev   = document.getElementById('chev-'+idx);
+  if (!detail) return;
+  const open = detail.classList.toggle('open');
+  if (chev) chev.classList.toggle('open', open);
 }
 
 // ─── Main dashboard render ───
