@@ -1589,7 +1589,7 @@ async function uploadToSupabase() {
   document.getElementById('uploadMsg').textContent=`✅ 成功上传 ${uploaded} 条记录`;
   document.getElementById('uploadBar').style.background='var(--green)';
   showStatus('✅ CGM 数据上传完成');
-  await loadCgmData(); renderDashboard();
+  await Promise.all([loadCgmData(), loadGmiAllData()]); renderDashboard();
 }
 function resetUpload(){
   parsedCSV=[];
