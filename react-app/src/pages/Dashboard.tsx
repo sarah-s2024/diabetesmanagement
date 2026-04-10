@@ -16,7 +16,7 @@ function getGreeting() {
 }
 
 export default function Dashboard() {
-  const { cgmData, dailyRecords, gmi, setActivePage, user } = useApp()
+  const { cgmData, dailyRecords, gmi, setActivePage, setChatOpen, user } = useApp()
   const cfg = getConfig()
 
   const stats = useMemo(() => {
@@ -219,23 +219,31 @@ export default function Dashboard() {
       {/* Meal & Exercise tabs */}
       <MealExerciseCard />
 
-      {/* AI Analysis */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-surface border border-gold/10 rounded-2xl p-5 mb-3 cursor-pointer group"
-        onClick={() => setActivePage('ai')}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-lg">✨</div>
-          <div className="flex-1">
-            <div className="text-sm font-medium text-text group-hover:text-gold transition-colors">AI 健康分析</div>
-            <div className="text-[11px] text-muted mt-0.5">基于你的数据，获取个性化建议</div>
-          </div>
-          <svg className="w-4 h-4 text-muted2 group-hover:text-gold transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </div>
-      </motion.div>
+      {/* AI buttons */}
+      <div className="grid grid-cols-2 gap-2.5 mb-3">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-surface border border-gold/10 rounded-2xl p-4 cursor-pointer group"
+          onClick={() => setChatOpen(true)}
+        >
+          <div className="text-2xl mb-2">💬</div>
+          <div className="text-sm font-medium text-text group-hover:text-gold transition-colors">AI 助手</div>
+          <div className="text-[11px] text-muted mt-0.5">对话式数据分析</div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-surface border border-gold/10 rounded-2xl p-4 cursor-pointer group"
+          onClick={() => setActivePage('ai')}
+        >
+          <div className="text-2xl mb-2">✨</div>
+          <div className="text-sm font-medium text-text group-hover:text-gold transition-colors">深度分析</div>
+          <div className="text-[11px] text-muted mt-0.5">自定义分析报告</div>
+        </motion.div>
+      </div>
     </div>
   )
 }

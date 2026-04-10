@@ -12,6 +12,7 @@ interface AppState {
   loading: boolean
   user: User | null
   activePage: string
+  chatOpen: boolean
   cgmData: CgmReading[]
   dailyRecords: DailyRecord[]
   gmi: number | null
@@ -22,6 +23,7 @@ interface AppContextType extends AppState {
   onLogin: (user: User) => void
   lock: () => void
   setActivePage: (page: string) => void
+  setChatOpen: (open: boolean) => void
   refreshData: () => Promise<void>
 }
 
@@ -30,7 +32,7 @@ const AppContext = createContext<AppContextType>(null!)
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({
     config: null, loading: true, user: null,
-    activePage: 'dashboard', cgmData: [], dailyRecords: [],
+    activePage: 'dashboard', chatOpen: false, cgmData: [], dailyRecords: [],
     gmi: null, connected: false,
   })
 
@@ -84,6 +86,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, activePage: page }))
   }, [])
 
+  const setChatOpen = useCallback((open: boolean) => {
+    setState(s => ({ ...s, chatOpen: open }))
+  }, [])
+
   // Restore session on load
   useEffect(() => {
     if (!state.loading && !state.user) {
@@ -93,7 +99,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [state.loading, state.user, onLogin])
 
   return (
-    <AppContext.Provider value={{ ...state, onLogin, lock, setActivePage, refreshData }}>
+    <AppContext.Provider value={{ ...state, onLogin, lock, setActivePage, setChatOpen, refreshData }}>
       {children}
     </AppContext.Provider>
   )
