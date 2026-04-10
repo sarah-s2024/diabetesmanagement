@@ -1174,39 +1174,50 @@ function renderBmiGauge(bmi) {
 }
 
 // ─── Meal plan ───
-function renderMealChart() {
-  const MEALS = [
-    { name:'早餐',   time:'08:00', kcal:360, p:26,   f:18.5, c:24,
+function renderMealChart(plan) {
+  // Base proportions (reference meal plan, ~1562 kcal total, excluding optional snack)
+  const BASE = [
+    { name:'早餐',     time:'08:00', kcal:360, p:26,   f:18.5, c:24,
       tag:'蛋白质优先', tagCol:'var(--accent)',
       foods:'2全蛋＋额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄 · 黑咖啡',
       note:'⏰ 07:30 空腹服 Levothyroxine；进食顺序：蛋白质 → 蔬菜 → 碳水' },
-    { name:'上午加餐', time:'10:30', kcal:175, p:26, f:7,    c:4,
+    { name:'上午加餐', time:'10:30', kcal:175, p:26,   f:7,    c:4,
       tag:'补充蛋白', tagCol:'var(--green)',
       foods:'蛋白粉1勺（30g）· 混合坚果10g（杏仁/核桃）',
       note:'搭配 Sunfiber 膳食纤维冲服，增加饱腹感' },
-    { name:'午餐',   time:'13:00', kcal:443, p:54,   f:9.5,  c:36,
+    { name:'午餐',     time:'13:00', kcal:443, p:54,   f:9.5,  c:36,
       tag:'碳水高峰', tagCol:'var(--blue)',
       foods:'鸡胸肉150g · 糙米饭100g · 西兰花150g · 混合生菜 · 橄榄油1茶匙',
       note:'胰岛素敏感性最高，可替换：三文鱼120g / 瘦牛肉150g；糙米→红薯100g或藜麦80g' },
-    { name:'下午加餐', time:'14:30', kcal:156, p:33, f:2,    c:3,
+    { name:'下午加餐', time:'14:30', kcal:156, p:33,   f:2,    c:3,
       tag:'双倍蛋白', tagCol:'var(--green)',
       foods:'蛋白粉1勺 · 胶原蛋白肽1勺（10g）',
       note:'' },
-    { name:'晚餐',   time:'17:30', kcal:428, p:42,   f:17,   c:28,
+    { name:'晚餐',     time:'17:30', kcal:428, p:42,   f:17,   c:28,
       tag:'控碳稳糖', tagCol:'var(--amber)',
       foods:'三文鱼/鳕鱼130g · 烤红薯80g · 芦笋/四季豆150g · 嫩豆腐80g · 味噌汤',
       note:'可替换：虾仁150g / 鸡腿去皮130g；红薯→南瓜100g（碳水更低）' },
-    { name:'晚间可选', time:'21:30', kcal:35, p:3,   f:0,    c:0,
-      tag:'可选', tagCol:'var(--muted)',
-      foods:'花草茶 / 温脱脂牛奶100ml',
-      note:'⏰ 同时服用 Naltrexone ＋ Zyrtec（距最后一餐3小时以上）' },
   ];
+  const OPTIONAL = { name:'晚间可选', time:'21:30', kcal:35, p:3, f:0, c:0,
+    tag:'可选', tagCol:'var(--muted)',
+    foods:'花草茶 / 温脱脂牛奶100ml',
+    note:'⏰ 同时服用 Naltrexone ＋ Zyrtec（距最后一餐3小时以上）' };
 
-  const totalKcal = MEALS.slice(0,5).reduce((s,m)=>s+m.kcal,0);
-  const totalP = Math.round(MEALS.reduce((s,m)=>s+m.p,0));
-  const totalF = Math.round(MEALS.reduce((s,m)=>s+m.f,0));
-  const totalC = Math.round(MEALS.reduce((s,m)=>s+m.c,0));
-  document.getElementById('mealPlanTitle').textContent = `全日 ~${totalKcal} kcal · 蛋白 ~${totalP}g`;
+  // Scale each meal proportionally to hit plan targets
+  const BASE_KCAL=1562, BASE_P=181, BASE_F=54, BASE_C=95;
+  const kSc = plan.kcal/BASE_KCAL, pSc = plan.proteinG/BASE_P, fSc = plan.fatG/BASE_F, cSc = plan.carbG/BASE_C;
+  const MEALS = BASE.map(m => ({...m,
+    kcal: Math.round(m.kcal*kSc),
+    p: Math.round(m.p*pSc),
+    f: Math.round(m.f*fSc*2)/2,
+    c: Math.round(m.c*cSc)
+  }));
+  MEALS.push(OPTIONAL);
+
+  const totalKcal = plan.kcal;
+  const totalP = plan.proteinG, totalF = plan.fatG, totalC = plan.carbG;
+  const aiLabel = plan.aiGenerated ? ' · ✨ AI 今日定制' : '';
+  document.getElementById('mealPlanTitle').textContent = `全日 ~${totalKcal} kcal · 蛋白 ~${totalP}g${aiLabel}`;
 
   if (mealChart) mealChart.destroy();
   mealChart = new Chart(document.getElementById('mealChart'), {
