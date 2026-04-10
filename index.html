@@ -1444,11 +1444,12 @@ async function renderCgmChart() {
   const fromVal = document.getElementById('cgmFrom').value;
   const toVal   = document.getElementById('cgmTo').value;
   let q = sb.from('cgm_readings').select('device_timestamp,glucose_mg_dl')
-    .not('glucose_mg_dl','is',null).order('device_timestamp',{ascending:true});
+    .not('glucose_mg_dl','is',null).order('device_timestamp',{ascending:false}).limit(10000);
   if (fromVal) q = q.gte('device_timestamp', fromVal);
   if (toVal)   q = q.lte('device_timestamp', toVal+'T23:59:59');
-  const { data, error } = await q;
-  if (error || !data || !data.length) return;
+  const { data: rawData, error } = await q;
+  if (error || !rawData || !rawData.length) return;
+  const data = rawData.reverse();
 
   const years = [...new Set(data.map(d=>new Date(d.device_timestamp).getFullYear()))].sort();
   document.getElementById('cgmYearBadge').textContent = years.length===1?`${years[0]}年`:`${years[0]}–${years[years.length-1]}年`;
