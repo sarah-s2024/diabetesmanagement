@@ -1352,11 +1352,8 @@ function renderDashboard() {
     const last = cgmData[cgmData.length-1];
     renderNowCard(Math.round(last.glucose_mg_dl), last.device_timestamp);
 
-    // GMI from all available data (Bergenstal 2018: GMI% = 3.31 + 0.02392 × mean mg/dL)
-    // Uses all loaded CGM data — better accuracy with more days
-    const allVals = cgmData.map(d=>d.glucose_mg_dl);
-    const gmiAvg = allVals.reduce((a,b)=>a+b,0) / allVals.length;
-    gmi = Math.round((3.31 + 0.02392 * gmiAvg) * 10) / 10;
+    // GMI from ALL historical CGM data (loaded separately via pagination)
+    gmi = gmiGlobal;
 
     // Use last 7 days relative to most recent data point (handles historical uploads)
     const lastTs = new Date(cgmData[cgmData.length-1].device_timestamp).getTime();
