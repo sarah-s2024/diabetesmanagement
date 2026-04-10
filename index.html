@@ -858,12 +858,7 @@ function renderRing(tirPct) {
   const dash = (tirPct / 100) * circ;
   document.getElementById('ringTrack').setAttribute('stroke-dasharray', `${dash.toFixed(1)} ${circ.toFixed(1)}`);
 
-  const score = Math.min(100, Math.round(
-    tirPct >= 90 ? 85 + (tirPct - 90) * 1.5 :
-    tirPct >= 70 ? 60 + (tirPct - 70) * 1.25 :
-    tirPct * 60 / 70
-  ));
-  document.getElementById('ringScore').textContent = score;
+  document.getElementById('ringScore').textContent = tirPct + '%';
 
   const state = tirPct >= 90 ? { text:'优秀', col:'var(--green)', dot:'#34d399', pill:'优秀控糖 🎯' }
     : tirPct >= 70 ? { text:'良好', col:'var(--amber)', dot:'#fbbf24', pill:'继续保持 💪' }
