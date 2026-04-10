@@ -1136,7 +1136,7 @@ function renderDashboard() {
       renderRing(tirPct);
     }
 
-    const h24 = cgmData.filter(d=>new Date(d.device_timestamp)>=new Date(Date.now()-86400000));
+    const h24 = cgmData.filter(d=>new Date(d.device_timestamp).getTime()>=lastTs-86400000);
     if (dashChart) dashChart.destroy();
     dashChart = new Chart(document.getElementById('dashCgmChart'),{
       type:'line',
