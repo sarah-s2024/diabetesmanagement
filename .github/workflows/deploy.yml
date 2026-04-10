@@ -30,15 +30,8 @@ jobs:
         working-directory: react-app
         env:
           VITE_SECRET_KEY: ${{ secrets.VITE_SECRET_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          CLAUDE_KEY: ${{ secrets.CLAUDE_KEY }}
-          OPENROUTER_KEY: ${{ secrets.OPENROUTER_KEY }}
-          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-          HEIGHT_CM: ${{ secrets.HEIGHT_CM }}
         run: |
           npm install
-          npm run encrypt-config
           npm run build
 
       - name: Setup Pages
