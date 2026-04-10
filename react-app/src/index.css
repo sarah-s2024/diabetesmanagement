@@ -1,41 +1,47 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #f8f9fc;
-  --color-surface: #ffffff;
-  --color-surface2: #f2f3f8;
-  --color-surface3: #eaecf4;
-  --color-border: rgba(0, 0, 0, 0.06);
-  --color-border2: rgba(0, 0, 0, 0.03);
-  --color-text: #0f172a;
-  --color-muted: #64748b;
-  --color-muted2: #94a3b8;
-  --color-accent: #6366f1;
-  --color-accent-glow: rgba(99, 102, 241, 0.15);
-  --color-green: #059669;
-  --color-green-dim: rgba(5, 150, 105, 0.08);
-  --color-red: #dc2626;
-  --color-red-dim: rgba(220, 38, 38, 0.07);
-  --color-amber: #d97706;
-  --color-amber-dim: rgba(217, 119, 6, 0.07);
-  --color-blue: #2563eb;
-  --color-blue-dim: rgba(37, 99, 235, 0.07);
+  /* ── Oura-inspired Black & Gold ── */
+  --color-bg: #0a0a0a;
+  --color-surface: #141414;
+  --color-surface2: #1c1c1c;
+  --color-surface3: #242424;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border2: rgba(255, 255, 255, 0.03);
+  --color-text: #f0ece4;
+  --color-muted: #7a756b;
+  --color-muted2: #504c45;
+  --color-accent: #c8a97d;
+  --color-accent-glow: rgba(200, 169, 125, 0.2);
+  --color-gold: #c8a97d;
+  --color-gold-dim: rgba(200, 169, 125, 0.1);
+  --color-green: #5cb88a;
+  --color-green-dim: rgba(92, 184, 138, 0.12);
+  --color-red: #e06464;
+  --color-red-dim: rgba(224, 100, 100, 0.12);
+  --color-amber: #d4a84b;
+  --color-amber-dim: rgba(212, 168, 75, 0.12);
+  --color-blue: #6b9fd4;
+  --color-blue-dim: rgba(107, 159, 212, 0.12);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { background: var(--color-bg); overflow-x: hidden; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   background: var(--color-bg); color: var(--color-text); min-height: 100vh;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden; margin: 0; line-height: 1.5;
 }
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(200,169,125,0.15); border-radius: 4px; }
 canvas { max-width: 100%; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse-glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-@keyframes blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes pulse-glow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
