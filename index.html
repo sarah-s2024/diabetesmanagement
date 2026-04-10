@@ -1417,6 +1417,51 @@ function toggleExDay(idx) {
   if (chev) chev.classList.toggle('open', open);
 }
 
+// ─── AI daily nutrition plan ───
+function buildDefaultPlan(kcal, kg) {
+  const pG = kg ? Math.round(Math.min(kg * 1.8, kcal * 0.35 / 4)) : Math.round(kcal * 0.30 / 4);
+  const fG = Math.round(kcal * 0.30 / 9);
+  const cG = Math.max(80, Math.round((kcal - pG*4 - fG*9) / 4));
+  return { kcal, proteinG: pG, fatG: fG, carbG: cG, aiGenerated: false };
+}
+
+function updateExerciseFocus(text) {
+  const banner = document.getElementById('exerciseFocusBanner');
+  const el = document.getElementById('exerciseFocusText');
+  if (banner && el && text) { el.textContent = text; banner.style.display = 'block'; }
+}
+
+async function loadAiNutritionPlan(snap) {
+  const apiKey = localStorage.getItem(CLAUDE_KEY_KEY);
+  if (!apiKey) return null;
+  const prompt = `你是糖尿病营养顾问。根据以下健康数据输出今日营养方案，仅返回一行JSON，不含任何说明文字：
+体重${snap.weightKg.toFixed(0)}kg 身高${snap.heightCm}cm BMI${snap.bmi.toFixed(1)} 基础热量预算${snap.kcalBase}kcal
+CGM均值${snap.avg||'未知'}mg/dL TIR${snap.tir||'未知'}% 标准差${snap.sd||'未知'}
+HbA1c:${snap.hba1c||'未知'}% 用药:${snap.meds}
+目标：血糖控制+健康减重+保护肌肉，蛋白质优先，控制精制碳水。
+{"kcal":number,"proteinG":number,"fatG":number,"carbG":number,"mealNote":"膳食重点≤25字","exerciseFocus":"运动重点≤35字"}`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,
+        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:130,
+        messages:[{role:'user',content:prompt}]})
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const text = (data.content?.[0]?.text||'').trim();
+    // extract JSON from response (handle any surrounding text)
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    const plan = JSON.parse(match[0]);
+    plan.date = new Date().toISOString().slice(0,10);
+    plan.aiGenerated = true;
+    localStorage.setItem('dm_ai_nutrition', JSON.stringify(plan));
+    return plan;
+  } catch(e) { return null; }
+}
+
 // ─── Main dashboard render ───
 function renderDashboard() {
   let tirPct = null, avg = null, sd = null, fasting = null, hba1c = null, bmi = null, weightLbs = null, gmi = null;
