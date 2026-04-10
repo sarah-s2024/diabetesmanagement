@@ -951,11 +951,11 @@ async function loadAllData() {
 }
 async function loadCgmData(from, to) {
   let q = sb.from('cgm_readings').select('device_timestamp,glucose_mg_dl')
-    .not('glucose_mg_dl','is',null).order('device_timestamp',{ascending:true});
+    .not('glucose_mg_dl','is',null).order('device_timestamp',{ascending:false}).limit(8000);
   if (from) q = q.gte('device_timestamp', from);
   if (to)   q = q.lte('device_timestamp', to);
   const { data, error } = await q;
-  if (!error && data) cgmData = data;
+  if (!error && data) cgmData = data.reverse(); // reverse to ascending for charts
 }
 async function loadDailyRecords() {
   const { data, error } = await sb.from('daily_records').select('*')
