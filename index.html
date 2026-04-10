@@ -1541,7 +1541,7 @@ function renderDashboard() {
     document.getElementById('d-weight').innerHTML = weightLbs + '<span style="font-size:11px;font-weight:400;color:var(--muted)"> lbs</span>';
   }
   if (weightLbs && heightCm) {
-    const kg = weightLbs / 2.205, m = heightCm / 100;
+    kg = weightLbs / 2.205; const m = heightCm / 100;
     bmi = kg / (m*m);
     renderBmiGauge(bmi);
     totalKcal = Math.max(1400, Math.round(kg*25/100)*100);
