@@ -7,7 +7,14 @@
     <meta name="theme-color" content="#06080f" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div style="position:fixed;inset:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+        <div style="width:32px;height:32px;border:2px solid rgba(200,169,125,0.2);border-top-color:#c8a97d;border-radius:50%;animation:spin .8s linear infinite"></div>
+        <div style="color:#7a756b;font-size:13px;font-family:-apple-system,sans-serif">加载中...</div>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    </div>
+    <noscript><div style="padding:40px;text-align:center;color:#c8a97d;font-family:sans-serif">请启用 JavaScript 以使用血糖管理应用</div></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
