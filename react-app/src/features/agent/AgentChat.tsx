@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { callAi, getAiProvider } from '../../lib/ai-client'
-import type { ToolDef } from '../../lib/ai-client'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { callAi, getAiProvider, parseAiStream } from '../../lib/ai-client'
+import type { ToolDef, StreamToolCall } from '../../lib/ai-client'
 import { getSupabase } from '../../lib/supabase'
 import { getActiveMeds } from '../../lib/storage'
 import { useApp } from '../../contexts/AppContext'
@@ -11,7 +13,7 @@ import {
 } from '../../lib/chat'
 import type { ChatSession } from '../../lib/chat'
 
-/* ── Tool definitions (unchanged) ── */
+/* ── Tool definitions ── */
 const TOOLS: ToolDef[] = [
   { type: 'function', function: { name: 'query_cgm_readings', description: '查询CGM血糖数据', parameters: { type: 'object', properties: { from_date: { type: 'string', description: '开始日期 YYYY-MM-DD' }, to_date: { type: 'string', description: '结束日期 YYYY-MM-DD' }, limit: { type: 'number', description: '上限，默认500' } } } } },
   { type: 'function', function: { name: 'query_daily_records', description: '查询每日健康记录', parameters: { type: 'object', properties: { from_date: { type: 'string' }, to_date: { type: 'string' }, limit: { type: 'number' } } } } },
@@ -21,7 +23,6 @@ const TOOLS: ToolDef[] = [
 
 interface Msg { role: 'user' | 'assistant' | 'tool'; content: string }
 
-/* ── Suggestion cards for empty state ── */
 const SUGGESTIONS = [
   { icon: '📊', text: '最近一周血糖控制如何？' },
   { icon: '🎯', text: '我的 TIR 达标率是多少？' },
@@ -29,7 +30,7 @@ const SUGGESTIONS = [
   { icon: '📈', text: '分析最近的体重变化趋势' },
 ]
 
-/* ── Tool executor (unchanged) ── */
+/* ── Tool executor ── */
 async function execTool(name: string, args: Record<string, any>, userId: number): Promise<any> {
   const sb = getSupabase()
   if (!sb) return { error: 'Supabase 未连接' }
@@ -94,6 +95,41 @@ function groupSessionsByDate(sessions: ChatSession[]) {
   return groups
 }
 
+/* ── Markdown renderer ── */
+function Md({ children }: { children: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: (props) => <p className="mb-3 last:mb-0 leading-[1.75]" {...props} />,
+        h1: (props) => <h1 className="text-lg font-semibold text-text mb-2 mt-5 first:mt-0" {...props} />,
+        h2: (props) => <h2 className="text-base font-semibold text-text mb-2 mt-4 first:mt-0" {...props} />,
+        h3: (props) => <h3 className="text-[14px] font-semibold text-text mb-1.5 mt-3 first:mt-0" {...props} />,
+        ul: (props) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
+        ol: (props) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
+        li: (props) => <li className="text-text/85 leading-[1.7]" {...props} />,
+        strong: (props) => <strong className="font-semibold text-text" {...props} />,
+        em: (props) => <em className="text-text/70" {...props} />,
+        a: ({ href, ...props }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-gold underline underline-offset-2 decoration-gold/30 hover:decoration-gold/60 transition-colors" {...props} />,
+        blockquote: (props) => <blockquote className="border-l-2 border-gold/25 pl-4 my-3 text-text/65 italic" {...props} />,
+        hr: () => <hr className="border-border my-5" />,
+        pre: (props) => <pre className="bg-surface2 border border-border rounded-xl p-4 my-3 overflow-x-auto text-[13px] leading-relaxed" {...props} />,
+        code: ({ className, children: c, ...props }) => {
+          const isBlock = className?.startsWith('language-') || (typeof props.node?.position?.start?.line === 'number' && props.node?.parent?.type === 'element')
+          if (isBlock) return <code className="font-mono text-text/80" {...props}>{c}</code>
+          return <code className="bg-surface3 text-gold/80 px-1.5 py-0.5 rounded text-[13px] font-mono" {...props}>{c}</code>
+        },
+        table: (props) => <div className="overflow-x-auto my-3 rounded-lg border border-border"><table className="w-full text-[13px] border-collapse" {...props} /></div>,
+        thead: (props) => <thead className="bg-surface2" {...props} />,
+        th: (props) => <th className="border-b border-border px-3 py-2 text-left text-text/80 font-medium" {...props} />,
+        td: (props) => <td className="border-b border-border px-3 py-2 text-text/70" {...props} />,
+      }}
+    >
+      {children}
+    </ReactMarkdown>
+  )
+}
+
 /* ══════════════════════════════════════════════════
    AgentChat — Claude.ai inspired design
    ══════════════════════════════════════════════════ */
@@ -106,6 +142,7 @@ export default function AgentChat() {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [typing, setTyping] = useState('')
+  const [streamingText, setStreamingText] = useState('')
   const msgEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const historyRef = useRef<any[]>([])
@@ -139,8 +176,8 @@ export default function AgentChat() {
     })
   }, [activeSessionId])
 
-  /* Auto-scroll to bottom */
-  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, typing])
+  /* Auto-scroll */
+  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, typing, streamingText])
 
   const startNewChat = () => {
     setActiveSessionId(null)
@@ -157,7 +194,7 @@ export default function AgentChat() {
     if (activeSessionId === id) { setActiveSessionId(null); setMessages([]); historyRef.current = [] }
   }
 
-  /* ── Send message ── */
+  /* ── Send message (streaming) ── */
   const send = async (overrideText?: string) => {
     const text = (overrideText || input).trim()
     if (busy || !text || !user) return
@@ -177,70 +214,95 @@ export default function AgentChat() {
     await saveMessage(sid, 'user', text)
     setBusy(true)
 
-    const sys = `你是糖尿病健康数据助手。今天是${new Date().toISOString().slice(0, 10)}。通过工具查询数据后给出分析。用中文回答。`
+    const sys = `你是糖尿病健康数据助手。今天是${new Date().toISOString().slice(0, 10)}。通过工具查询数据后给出分析。用中文回答，善用 Markdown 格式（标题、列表、加粗、表格等）让回答更清晰。`
 
     try {
       for (let round = 0; round < 6; round++) {
         setTyping(round === 0 ? '思考中...' : '分析数据...')
-        const r = await callAi({ model: 'claude-sonnet-4-6', system: sys, messages: historyRef.current, max_tokens: 1500, tools: TOOLS })
-        if (!r || !r.res.ok) throw new Error(`HTTP ${r?.res?.status}`)
-        const data = await r.res.json()
 
-        if (r.format === 'openai') {
-          const msg = data.choices?.[0]?.message
-          if (msg?.tool_calls?.length) {
-            historyRef.current.push({ role: 'assistant', content: msg.content || null, tool_calls: msg.tool_calls })
-            for (const tc of msg.tool_calls) {
-              const args = JSON.parse(tc.function.arguments || '{}')
-              setTyping(`查询 ${tc.function.name}...`)
-              const toolLabel = `🔧 ${tc.function.name}(${JSON.stringify(args)})`
+        const r = await callAi({
+          model: 'claude-sonnet-4-6', system: sys,
+          messages: historyRef.current, max_tokens: 1500,
+          tools: TOOLS, stream: true,
+        })
+        if (!r || !r.res.ok) {
+          const errBody = await r?.res?.text().catch(() => '')
+          throw new Error(errBody || `HTTP ${r?.res?.status}`)
+        }
+
+        /* Stream the response */
+        setTyping('')
+        let streamText = ''
+        const toolCalls: StreamToolCall[] = []
+
+        for await (const ev of parseAiStream(r.res, r.format)) {
+          if (ev.type === 'text') {
+            streamText += ev.text
+            setStreamingText(streamText)
+          } else if (ev.type === 'tool_call') {
+            toolCalls.push(ev.toolCall)
+          }
+        }
+        setStreamingText('')
+
+        /* Handle tool calls */
+        if (toolCalls.length > 0) {
+          // Save any streamed text that preceded tool calls
+          if (streamText) {
+            setMessages(m => [...m, { role: 'assistant', content: streamText }])
+            await saveMessage(sid!, 'assistant', streamText)
+          }
+
+          if (r.format === 'openai') {
+            historyRef.current.push({
+              role: 'assistant', content: streamText || null,
+              tool_calls: toolCalls.map(tc => ({ id: tc.id, type: 'function', function: { name: tc.name, arguments: JSON.stringify(tc.args) } }))
+            })
+            for (const tc of toolCalls) {
+              setTyping(`查询 ${tc.name}...`)
+              const toolLabel = `🔧 ${tc.name}(${JSON.stringify(tc.args)})`
               setMessages(m => [...m, { role: 'tool', content: toolLabel }])
               await saveMessage(sid!, 'tool', toolLabel)
-              const result = await execTool(tc.function.name, args, user.id)
+              const result = await execTool(tc.name, tc.args, user.id)
               historyRef.current.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) })
               const resultLabel = `📊 返回 ${result.count !== undefined ? result.count + ' 条数据' : JSON.stringify(result).slice(0, 100)}`
               setMessages(m => [...m, { role: 'tool', content: resultLabel }])
               await saveMessage(sid!, 'tool', resultLabel)
             }
-            continue
-          }
-          const reply = msg?.content || ''
-          if (reply) {
-            historyRef.current.push({ role: 'assistant', content: reply })
-            setMessages(m => [...m, { role: 'assistant', content: reply }])
-            await saveMessage(sid!, 'assistant', reply)
-            if (sessions.find(s => s.id === sid)?.title === '新对话') {
-              const title = reply.slice(0, 30).replace(/\n/g, ' ')
-              updateSessionTitle(sid!, title)
-              setSessions(prev => prev.map(s => s.id === sid ? { ...s, title } : s))
-            }
-          }
-          break
-        } else {
-          const contents = data.content || []
-          const toolUses = contents.filter((c: any) => c.type === 'tool_use')
-          const textParts = contents.filter((c: any) => c.type === 'text').map((c: any) => c.text).join('')
-          if (toolUses.length) {
-            historyRef.current.push({ role: 'assistant', content: contents })
-            for (const tu of toolUses) {
-              setTyping(`查询 ${tu.name}...`)
-              const toolLabel = `🔧 ${tu.name}`
+          } else {
+            // Anthropic history format
+            const blocks: any[] = []
+            if (streamText) blocks.push({ type: 'text', text: streamText })
+            for (const tc of toolCalls) blocks.push({ type: 'tool_use', id: tc.id, name: tc.name, input: tc.args })
+            historyRef.current.push({ role: 'assistant', content: blocks })
+
+            for (const tc of toolCalls) {
+              setTyping(`查询 ${tc.name}...`)
+              const toolLabel = `🔧 ${tc.name}`
               setMessages(m => [...m, { role: 'tool', content: toolLabel }])
               await saveMessage(sid!, 'tool', toolLabel)
-              const result = await execTool(tu.name, tu.input, user.id)
-              historyRef.current.push({ role: 'user', content: [{ type: 'tool_result', tool_use_id: tu.id, content: JSON.stringify(result) }] })
+              const result = await execTool(tc.name, tc.args, user.id)
+              historyRef.current.push({ role: 'user', content: [{ type: 'tool_result', tool_use_id: tc.id, content: JSON.stringify(result) }] })
             }
-            continue
           }
-          if (textParts) {
-            historyRef.current.push({ role: 'assistant', content: textParts })
-            setMessages(m => [...m, { role: 'assistant', content: textParts }])
-            await saveMessage(sid!, 'assistant', textParts)
-          }
-          break
+          continue // next round
         }
+
+        /* Text-only response — finalize */
+        if (streamText) {
+          historyRef.current.push({ role: 'assistant', content: streamText })
+          setMessages(m => [...m, { role: 'assistant', content: streamText }])
+          await saveMessage(sid!, 'assistant', streamText)
+          if (sessions.find(s => s.id === sid)?.title === '新对话') {
+            const title = streamText.slice(0, 30).replace(/\n/g, ' ')
+            updateSessionTitle(sid!, title)
+            setSessions(prev => prev.map(s => s.id === sid ? { ...s, title } : s))
+          }
+        }
+        break
       }
     } catch (e: any) {
+      setStreamingText('')
       const errMsg = '请求失败：' + e.message
       setMessages(m => [...m, { role: 'assistant', content: errMsg }])
       await saveMessage(sid!, 'assistant', errMsg)
@@ -264,7 +326,6 @@ export default function AgentChat() {
           >
             {/* ── Header ── */}
             <header className="flex items-center justify-between px-3 h-13 shrink-0 border-b border-border bg-bg/80 backdrop-blur-xl">
-              {/* Left */}
               <button
                 onClick={() => setShowSidebar(true)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-muted hover:text-text hover:bg-surface2 transition-colors cursor-pointer bg-transparent border-none"
@@ -275,7 +336,6 @@ export default function AgentChat() {
                 </svg>
               </button>
 
-              {/* Center */}
               <div className="flex-1 text-center">
                 <span className="text-[13px] font-medium text-text/90 truncate">
                   {activeSessionId
@@ -284,7 +344,6 @@ export default function AgentChat() {
                 </span>
               </div>
 
-              {/* Right */}
               <div className="flex items-center gap-0.5">
                 <button
                   onClick={startNewChat}
@@ -307,8 +366,7 @@ export default function AgentChat() {
 
             {/* ── Body ── */}
             <div className="flex-1 overflow-hidden relative">
-
-              {/* Sidebar overlay */}
+              {/* Sidebar */}
               <AnimatePresence>
                 {showSidebar && (
                   <>
@@ -323,7 +381,6 @@ export default function AgentChat() {
                       transition={{ type: 'spring', stiffness: 350, damping: 35 }}
                       className="absolute left-0 top-0 bottom-0 w-[300px] max-w-[85vw] bg-surface z-40 flex flex-col shadow-[8px_0_32px_rgba(0,0,0,0.4)]"
                     >
-                      {/* Sidebar header */}
                       <div className="flex items-center justify-between px-4 h-13 border-b border-border shrink-0">
                         <span className="text-[13px] font-semibold text-text">对话历史</span>
                         <button
@@ -335,8 +392,6 @@ export default function AgentChat() {
                           </svg>
                         </button>
                       </div>
-
-                      {/* New chat in sidebar */}
                       <div className="px-3 pt-3 pb-1">
                         <button
                           onClick={startNewChat}
@@ -348,8 +403,6 @@ export default function AgentChat() {
                           开始新对话
                         </button>
                       </div>
-
-                      {/* Session list */}
                       <div className="flex-1 overflow-y-auto px-2 py-2">
                         {sessions.length === 0 ? (
                           <div className="text-sm text-muted text-center py-16 px-4 leading-relaxed">
@@ -391,27 +444,19 @@ export default function AgentChat() {
                 )}
               </AnimatePresence>
 
-              {/* ── Main chat area ── */}
+              {/* ── Chat area ── */}
               <div className="h-full overflow-y-auto scroll-smooth">
                 {showWelcome ? (
-                  /* ═══ Welcome State ═══ */
+                  /* Welcome */
                   <div className="flex flex-col items-center justify-center min-h-full px-6 pb-8">
-                    {/* AI Avatar */}
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-gold/15 to-gold/5 border border-gold/10 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(200,169,125,0.08)]">
                       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-gold">
                         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" opacity="0.2" />
                         <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
-
-                    <h2 className="text-[22px] font-light text-text tracking-tight mb-1.5">
-                      有什么我可以帮你的？
-                    </h2>
-                    <p className="text-sm text-muted mb-10 text-center leading-relaxed">
-                      我可以分析你的血糖数据、查看健康记录和用药信息
-                    </p>
-
-                    {/* Suggestion cards */}
+                    <h2 className="text-[22px] font-light text-text tracking-tight mb-1.5">有什么我可以帮你的？</h2>
+                    <p className="text-sm text-muted mb-10 text-center leading-relaxed">我可以分析你的血糖数据、查看健康记录和用药信息</p>
                     <div className="grid grid-cols-2 gap-2.5 w-full max-w-[360px]">
                       {SUGGESTIONS.map((s, i) => (
                         <motion.button
@@ -422,15 +467,13 @@ export default function AgentChat() {
                           className="flex flex-col gap-2.5 p-4 rounded-2xl bg-surface border border-border text-left cursor-pointer hover:border-gold/15 hover:bg-surface2 transition-all duration-200 group"
                         >
                           <span className="text-base">{s.icon}</span>
-                          <span className="text-[12px] text-muted/80 group-hover:text-text/70 transition-colors leading-relaxed">
-                            {s.text}
-                          </span>
+                          <span className="text-[12px] text-muted/80 group-hover:text-text/70 transition-colors leading-relaxed">{s.text}</span>
                         </motion.button>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  /* ═══ Messages ═══ */
+                  /* Messages */
                   <div className="flex flex-col px-4 py-5 max-w-[680px] mx-auto">
                     {messages.map((m, i) => (
                       <motion.div
@@ -440,14 +483,12 @@ export default function AgentChat() {
                         transition={{ duration: 0.25, ease: 'easeOut' }}
                       >
                         {m.role === 'user' ? (
-                          /* User message */
                           <div className="flex justify-end mb-5">
                             <div className="max-w-[82%] bg-gold/12 border border-gold/8 text-text rounded-[20px] rounded-br-md px-4 py-3 text-[14px] leading-relaxed">
                               {m.content}
                             </div>
                           </div>
                         ) : m.role === 'tool' ? (
-                          /* Tool indicator — minimal inline */
                           <div className="flex items-center gap-2 ml-1 mb-2">
                             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface2/60 text-[11px] text-muted/50">
                               <span className="w-1 h-1 rounded-full bg-gold/50" />
@@ -455,18 +496,23 @@ export default function AgentChat() {
                             </div>
                           </div>
                         ) : (
-                          /* Assistant message — no bubble, like Claude.ai */
-                          <div className="mb-6 pl-1">
-                            <div className="text-[14px] text-text/85 leading-[1.75] whitespace-pre-wrap">
-                              {m.content}
-                            </div>
+                          <div className="mb-6 pl-1 text-[14px] text-text/85 leading-[1.75] markdown-body">
+                            <Md>{m.content}</Md>
                           </div>
                         )}
                       </motion.div>
                     ))}
 
+                    {/* Streaming text (typewriter) */}
+                    {streamingText && (
+                      <div className="mb-6 pl-1 text-[14px] text-text/85 leading-[1.75] markdown-body">
+                        <Md>{streamingText}</Md>
+                        <span className="inline-block w-[2px] h-[18px] bg-gold/70 animate-[blink_1s_infinite] ml-0.5 align-text-bottom rounded-full" />
+                      </div>
+                    )}
+
                     {/* Typing indicator */}
-                    {typing && (
+                    {typing && !streamingText && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -487,7 +533,7 @@ export default function AgentChat() {
               </div>
             </div>
 
-            {/* ── Input Area ── */}
+            {/* ── Input ── */}
             <div className="shrink-0 px-4 pt-2 pb-[calc(14px+env(safe-area-inset-bottom,0px))]">
               <div className="flex items-end gap-2 bg-surface border border-border rounded-2xl pl-4 pr-2 py-2 max-w-[680px] mx-auto transition-colors focus-within:border-gold/20 shadow-[0_-2px_16px_rgba(0,0,0,0.15)]">
                 <textarea
@@ -510,8 +556,6 @@ export default function AgentChat() {
                   </svg>
                 </button>
               </div>
-
-              {/* Model label */}
               <p className="text-center text-[10px] text-muted/30 mt-2 tracking-wide">
                 Claude Sonnet · 数据仅用于分析
               </p>
