@@ -115,7 +115,7 @@ function Md({ children }: { children: string }) {
         hr: () => <hr className="border-border my-5" />,
         pre: (props) => <pre className="bg-surface2 border border-border rounded-xl p-4 my-3 overflow-x-auto text-[13px] leading-relaxed" {...props} />,
         code: ({ className, children: c, ...props }) => {
-          const isBlock = className?.startsWith('language-') || (typeof props.node?.position?.start?.line === 'number' && props.node?.parent?.type === 'element')
+          const isBlock = className?.startsWith('language-') || (typeof (props.node as any)?.position?.start?.line === 'number' && (props.node as any)?.parent?.type === 'element')
           if (isBlock) return <code className="font-mono text-text/80" {...props}>{c}</code>
           return <code className="bg-surface3 text-gold/80 px-1.5 py-0.5 rounded text-[13px] font-mono" {...props}>{c}</code>
         },
@@ -170,9 +170,12 @@ export default function AgentChat() {
     loadMessages(activeSessionId).then(rows => {
       if (!rows.length) { setMessages([]); historyRef.current = []; return }
       setMessages(rows.map(r => ({ role: r.role as Msg['role'], content: r.content })))
+      // Rebuild AI history: keep user + assistant for context, skip tool display labels
+      // (tool results were ephemeral and not stored in a way the API can reuse,
+      //  so we only keep user/assistant turns for conversational continuity)
       historyRef.current = rows
         .filter(r => r.role === 'user' || r.role === 'assistant')
-        .map(r => ({ role: r.role, content: r.content }))
+        .map(r => ({ role: r.role as string, content: r.content }))
     })
   }, [activeSessionId])
 
@@ -214,7 +217,13 @@ export default function AgentChat() {
     await saveMessage(sid, 'user', text)
     setBusy(true)
 
-    const sys = `你是糖尿病健康数据助手。今天是${new Date().toISOString().slice(0, 10)}。通过工具查询数据后给出分析。用中文回答，善用 Markdown 格式（标题、列表、加粗、表格等）让回答更清晰。`
+    const sys = `你是一个智能健康助手，可以陪用户聊天、回答各种问题，也可以通过工具查询用户的健康数据（血糖、日常记录、用药等）进行分析。
+
+重要规则：
+- 只有当用户明确要求查看或分析健康数据时，才使用工具查询。日常闲聊、知识问答等不需要调用工具。
+- 用中文回答，善用 Markdown 格式（标题、列表、加粗、表格等）让回答结构清晰。
+- 今天是 ${new Date().toISOString().slice(0, 10)}。
+- 保持友好、专业的语气，像一个贴心的健康顾问。`
 
     try {
       for (let round = 0; round < 6; round++) {
