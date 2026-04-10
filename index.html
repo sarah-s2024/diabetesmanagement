@@ -1023,6 +1023,25 @@ function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi) {
     </div>`).join('');
 }
 
+// ─── Inline medication display ───
+function renderMedInline() {
+  const meds = getActiveMeds();
+  const sec = document.getElementById('medInlineSection');
+  const list = document.getElementById('medInlineList');
+  if (!meds.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = meds.map(m => {
+    const name = m.drug.split(' ')[0] + (m.drug.includes(' ') ? ' ' + m.drug.split(' ').slice(1, 2).join('') : '');
+    const short = m.drug.length > 12 ? m.drug.slice(0, 12) + '…' : m.drug;
+    const col = m.cat.includes('GLP-1') ? 'var(--accent)' : m.cat.includes('SGLT2') ? 'var(--blue)' : m.cat.includes('二甲') ? 'var(--green)' : 'var(--amber)';
+    return `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px">
+      <span style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0"></span>
+      <span style="color:var(--text)">${short}</span>
+      ${m.dose ? `<span style="color:var(--muted);font-size:11px">${m.dose}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
 // ─── Latest reading / Now card ───
 function renderNowCard(val, ts) {
   if (!val) return;
