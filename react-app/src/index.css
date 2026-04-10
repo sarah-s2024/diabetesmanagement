@@ -1,37 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #f4f6fb;
+  --color-bg: #f8f9fc;
   --color-surface: #ffffff;
-  --color-surface2: #eef1f8;
-  --color-surface3: #e4e8f2;
-  --color-border: rgba(0, 0, 0, 0.07);
-  --color-border2: rgba(0, 0, 0, 0.04);
-  --color-text: #1a1d2e;
-  --color-muted: #7c849b;
-  --color-muted2: #a0a8bc;
-  --color-accent: #7c5cf6;
-  --color-accent-glow: rgba(124, 92, 246, 0.18);
-  --color-green: #10b981;
-  --color-green-dim: rgba(16, 185, 129, 0.1);
-  --color-red: #ef4444;
-  --color-red-dim: rgba(239, 68, 68, 0.1);
-  --color-amber: #f59e0b;
-  --color-amber-dim: rgba(245, 158, 11, 0.1);
-  --color-blue: #3b82f6;
-  --color-blue-dim: rgba(59, 130, 246, 0.1);
+  --color-surface2: #f2f3f8;
+  --color-surface3: #eaecf4;
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border2: rgba(0, 0, 0, 0.03);
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-muted2: #94a3b8;
+  --color-accent: #6366f1;
+  --color-accent-glow: rgba(99, 102, 241, 0.15);
+  --color-green: #059669;
+  --color-green-dim: rgba(5, 150, 105, 0.08);
+  --color-red: #dc2626;
+  --color-red-dim: rgba(220, 38, 38, 0.07);
+  --color-amber: #d97706;
+  --color-amber-dim: rgba(217, 119, 6, 0.07);
+  --color-blue: #2563eb;
+  --color-blue-dim: rgba(37, 99, 235, 0.07);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { background: var(--color-bg); overflow-x: hidden; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', sans-serif;
   background: var(--color-bg); color: var(--color-text); min-height: 100vh;
-  -webkit-font-smoothing: antialiased; overflow-x: hidden; margin: 0;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; margin: 0; line-height: 1.5;
 }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
 canvas { max-width: 100%; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
