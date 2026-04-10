@@ -1171,37 +1171,108 @@ function renderBmiGauge(bmi) {
 }
 
 // ─── Meal plan ───
-function renderMealChart(totalKcal) {
-  const dayIdx = new Date().getDay();
-  const mealDefs = [
-    { name:'早餐',    pct:.18, opts:['燕麦+煮鸡蛋+无糖豆浆','全麦吐司+牛油果+酸奶','小米粥+卤蛋+蒸时蔬'] },
-    { name:'上午点心', pct:.10, opts:['坚果15g','小苹果+低脂奶酪','黄瓜+鹰嘴豆泥'] },
-    { name:'午餐',    pct:.32, opts:['鸡胸肉+糙米+西蓝花','三文鱼+藜麦沙拉','豆腐炒蔬菜+糙米饭'] },
-    { name:'下午点心', pct:.10, opts:['希腊酸奶+蓝莓','高纤饼干+奶酪','煮毛豆100g'] },
-    { name:'晚餐',    pct:.30, opts:['清蒸鱼+时蔬+藜麦','鸡肉蔬菜汤+全麦馒头','虾仁炒芦笋+杂粮饭'] }
+function renderMealChart() {
+  const MEALS = [
+    { name:'早餐',   time:'08:00', kcal:360, p:26,   f:18.5, c:24,
+      tag:'蛋白质优先', tagCol:'var(--accent)',
+      foods:'2全蛋＋额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄 · 黑咖啡',
+      note:'⏰ 07:30 空腹服 Levothyroxine；进食顺序：蛋白质 → 蔬菜 → 碳水' },
+    { name:'上午加餐', time:'10:30', kcal:175, p:26, f:7,    c:4,
+      tag:'补充蛋白', tagCol:'var(--green)',
+      foods:'蛋白粉1勺（30g）· 混合坚果10g（杏仁/核桃）',
+      note:'搭配 Sunfiber 膳食纤维冲服，增加饱腹感' },
+    { name:'午餐',   time:'13:00', kcal:443, p:54,   f:9.5,  c:36,
+      tag:'碳水高峰', tagCol:'var(--blue)',
+      foods:'鸡胸肉150g · 糙米饭100g · 西兰花150g · 混合生菜 · 橄榄油1茶匙',
+      note:'胰岛素敏感性最高，可替换：三文鱼120g / 瘦牛肉150g；糙米→红薯100g或藜麦80g' },
+    { name:'下午加餐', time:'14:30', kcal:156, p:33, f:2,    c:3,
+      tag:'双倍蛋白', tagCol:'var(--green)',
+      foods:'蛋白粉1勺 · 胶原蛋白肽1勺（10g）',
+      note:'' },
+    { name:'晚餐',   time:'17:30', kcal:428, p:42,   f:17,   c:28,
+      tag:'控碳稳糖', tagCol:'var(--amber)',
+      foods:'三文鱼/鳕鱼130g · 烤红薯80g · 芦笋/四季豆150g · 嫩豆腐80g · 味噌汤',
+      note:'可替换：虾仁150g / 鸡腿去皮130g；红薯→南瓜100g（碳水更低）' },
+    { name:'晚间可选', time:'21:30', kcal:35, p:3,   f:0,    c:0,
+      tag:'可选', tagCol:'var(--muted)',
+      foods:'花草茶 / 温脱脂牛奶100ml',
+      note:'⏰ 同时服用 Naltrexone ＋ Zyrtec（距最后一餐3小时以上）' },
   ];
-  const kcals = mealDefs.map(m => Math.round(totalKcal * m.pct));
-  document.getElementById('mealPlanTitle').textContent = totalKcal + ' kcal 个性化膳食方案';
-  document.getElementById('mealPlanList').innerHTML = mealDefs.map((m,i) =>
-    `<div><strong>${m.name}</strong>：${m.opts[dayIdx%3]} — <span style="color:var(--accent)">${kcals[i]} kcal</span></div>`
-  ).join('');
+
+  const totalKcal = MEALS.slice(0,5).reduce((s,m)=>s+m.kcal,0);
+  const totalP = Math.round(MEALS.reduce((s,m)=>s+m.p,0));
+  const totalF = Math.round(MEALS.reduce((s,m)=>s+m.f,0));
+  const totalC = Math.round(MEALS.reduce((s,m)=>s+m.c,0));
+  document.getElementById('mealPlanTitle').textContent = `全日 ~${totalKcal} kcal · 蛋白 ~${totalP}g`;
+
   if (mealChart) mealChart.destroy();
-  mealChart = new Chart(document.getElementById('mealChart'),{
-    type:'bar',
-    data:{
-      labels: mealDefs.map(m=>m.name),
-      datasets:[{label:'卡路里',data:kcals,
-        backgroundColor:['rgba(139,92,246,.75)','rgba(52,211,153,.6)','rgba(139,92,246,.75)','rgba(52,211,153,.6)','rgba(139,92,246,.75)'],
-        borderRadius:10,barPercentage:.6}]
+  mealChart = new Chart(document.getElementById('mealChart'), {
+    type: 'bar',
+    data: {
+      labels: MEALS.map(m => m.name),
+      datasets: [
+        { label:'蛋白质(g)', data:MEALS.map(m=>m.p),   backgroundColor:'rgba(139,92,246,.82)', borderRadius:{topLeft:4,topRight:4,bottomLeft:0,bottomRight:0}, stack:'m' },
+        { label:'脂肪(g)',   data:MEALS.map(m=>m.f),   backgroundColor:'rgba(251,191,36,.75)',  borderRadius:0, stack:'m' },
+        { label:'碳水(g)',   data:MEALS.map(m=>m.c),   backgroundColor:'rgba(96,165,250,.78)',  borderRadius:{topLeft:0,topRight:0,bottomLeft:4,bottomRight:4}, stack:'m' },
+      ]
     },
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:ctx=>mealDefs[ctx.dataIndex].opts[dayIdx%3]}}},
-      scales:{
-        y:{ticks:{font:{size:10},color:'#6b7691',callback:v=>v+''},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-        x:{ticks:{font:{size:10},color:'#6b7691'},grid:{display:false}}
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend: { display:true, position:'top', labels:{color:'#8892aa',font:{size:10},boxWidth:10,padding:14} },
+        tooltip: { callbacks: {
+          title: ctx => `${MEALS[ctx[0].dataIndex].name}  ${MEALS[ctx[0].dataIndex].time}`,
+          afterTitle: ctx => `${MEALS[ctx[0].dataIndex].kcal} kcal`,
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}g`
+        }}
+      },
+      scales: {
+        y: { stacked:true, ticks:{font:{size:10},color:'#6b7691',callback:v=>v+'g'}, grid:{color:'rgba(255,255,255,.04)'}, border:{display:false} },
+        x: { stacked:true, ticks:{font:{size:10},color:'#6b7691'}, grid:{display:false} }
       }
     }
   });
+
+  // Macro summary strip
+  const strip = `<div style="display:flex;gap:18px;padding:10px 2px 14px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+      <span style="width:10px;height:10px;border-radius:2px;background:rgba(139,92,246,.82)"></span>
+      <span style="color:var(--muted)">蛋白质</span><strong style="color:var(--text)">${totalP}g</strong>
+      <span style="font-size:10px;color:var(--muted)">≈${totalP*4} kcal</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+      <span style="width:10px;height:10px;border-radius:2px;background:rgba(251,191,36,.75)"></span>
+      <span style="color:var(--muted)">脂肪</span><strong style="color:var(--text)">${totalF}g</strong>
+      <span style="font-size:10px;color:var(--muted)">≈${totalF*9} kcal</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+      <span style="width:10px;height:10px;border-radius:2px;background:rgba(96,165,250,.78)"></span>
+      <span style="color:var(--muted)">碳水</span><strong style="color:var(--text)">${totalC}g</strong>
+      <span style="font-size:10px;color:var(--muted)">≈${totalC*4} kcal</span>
+    </div>
+  </div>`;
+
+  // Meal detail cards
+  const cards = MEALS.map(m => `
+    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;background:var(--surface2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:var(--text)">${m.name}</span>
+          <span style="font-size:10px;color:var(--muted);background:var(--surface3);padding:2px 7px;border-radius:8px">${m.time}</span>
+          <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.05);color:${m.tagCol}">${m.tag}</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0">${m.kcal} kcal</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:7px;line-height:1.6">${m.foods}</div>
+      <div style="display:flex;gap:12px;font-size:11px;margin-bottom:${m.note?'8px':'0'}">
+        <span style="color:rgba(139,92,246,.9)">蛋白 ${m.p}g</span>
+        <span style="color:rgba(251,191,36,.9)">脂肪 ${m.f}g</span>
+        <span style="color:rgba(96,165,250,.9)">碳水 ${m.c}g</span>
+      </div>
+      ${m.note?`<div style="font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:7px;line-height:1.6">${m.note}</div>`:''}
+    </div>`).join('');
+
+  document.getElementById('mealPlanList').innerHTML = strip + cards;
 }
 
 // ─── Exercise plan ───
