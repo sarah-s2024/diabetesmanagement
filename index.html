@@ -837,6 +837,29 @@ const SUPABASE_URL_KEY = 'dm_sb_url';
 const SUPABASE_KEY_KEY = 'dm_sb_key';
 const CLAUDE_KEY_KEY = 'dm_claude_key';
 const HEIGHT_KEY = 'dm_height_cm';
+const MEDS_KEY   = 'dm_medications';
+
+const MED_DRUGS = {
+  'GLP-1 受体激动剂': [
+    '司美格鲁肽 Wegovy（每周注射，减重）',
+    '司美格鲁肽 Ozempic / 诺和泰（每周注射，T2DM）',
+    '利拉鲁肽 Saxenda（每日注射，减重）',
+    '利拉鲁肽 Victoza / 诺和力（每日注射，T2DM）',
+    '度拉糖肽 Trulicity（每周注射，T2DM）',
+  ],
+  'GIP/GLP-1 双重激动剂': [
+    '替尔泊肽 Zepbound（每周注射，减重）',
+    '替尔泊肽 Mounjaro（每周注射，T2DM）',
+  ],
+  'SGLT2 抑制剂': [
+    '达格列净 Dapagliflozin / 安达唐',
+    '恩格列净 Empagliflozin / 欧唐静',
+  ],
+  '传统经典用药（二甲双胍等）': [
+    '二甲双胍 Metformin（每日口服）',
+  ],
+  '其他': ['其他药物（手动填写剂量栏）'],
+};
 
 let sb = null, cgmData = [], dailyRecords = [], parsedCSV = [];
 let dashChart = null, cgmLineChart = null, agpChart = null, histChart = null, mealChart = null, exerciseChart = null;
