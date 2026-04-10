@@ -1160,8 +1160,12 @@ function renderDashboard() {
 
   let totalKcal = 1800;
   if (dailyRecords.length) {
-    fasting = dailyRecords[0]?.fasting_glucose || null;
-    weightLbs = dailyRecords[0]?.weight_lbs || null;
+    // Use most recent record that has fasting glucose
+    const fastingRec = dailyRecords.find(r=>r.fasting_glucose);
+    if (fastingRec) fasting = fastingRec.fasting_glucose;
+    // Search all records for most recent weight (not just today's)
+    const weightRec = dailyRecords.find(r=>r.weight_lbs);
+    if (weightRec) weightLbs = weightRec.weight_lbs;
     const hRec = dailyRecords.find(r=>r.hba1c);
     if (hRec) {
       hba1c = hRec.hba1c;
@@ -1177,8 +1181,10 @@ function renderDashboard() {
     renderBmiGauge(bmi);
     totalKcal = Math.max(1400, Math.round(kg*25/100)*100);
     document.getElementById('d-kcal').textContent = totalKcal + ' kcal';
-  } else {
+  } else if (!heightCm) {
     document.getElementById('d-kcal').textContent = '请配置身高';
+  } else {
+    document.getElementById('d-kcal').textContent = '请记录体重';
   }
 
   renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi);
