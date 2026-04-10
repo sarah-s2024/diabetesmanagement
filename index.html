@@ -874,11 +874,6 @@ function renderRing(tirPct) {
 function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi) {
   const cards = [];
 
-  if (tirPct != null) {
-    const col = tirPct>=90?'var(--green)':tirPct>=70?'var(--amber)':'var(--red)';
-    const st  = tirPct>=90?'优秀':tirPct>=70?'良好':'偏低';
-    cards.push({icon:'🎯', val:tirPct+'%', name:'TIR达标率', col, st});
-  }
   if (avg != null) {
     const col = avg<=140?'var(--green)':avg<=180?'var(--amber)':'var(--red)';
     const st  = avg<=140?'正常':avg<=180?'偏高':'高';
