@@ -1786,6 +1786,11 @@ async function getAiAnalysis(){
   const avgF=dailyRecords.filter(r=>r.fasting_glucose).map(r=>r.fasting_glucose);
   const avgP=dailyRecords.filter(r=>r.post_meal_glucose).map(r=>r.post_meal_glucose);
   const notes=dailyRecords.filter(r=>r.notes).slice(0,8).map(r=>`${r.record_date.slice(5)}: ${r.notes}`).join('；');
+
+  // Active medications
+  const activeMeds = getActiveMeds();
+  const medLines = activeMeds.map(m=>`  ${m.cat}：${m.drug}${m.dose?' ('+m.dose+')':''} 自${m.startDate}起`);
+
   const dataBlock=[
     overall?`【CGM近3月】TIR: ${overall.tir}%  低血糖: ${overall.low}%  高血糖: ${overall.high}%  均值: ${overall.avg} mg/dL（最高${overall.max}，最低${overall.min}）`:'',
     weeklyLines.length?`【每周趋势】\n${weeklyLines.join('\n')}`:'',
@@ -1793,6 +1798,7 @@ async function getAiAnalysis(){
     weightRecs.length?`【体重】${weightRecs.join('，')}`:'',
     avgF.length?`【空腹均值】${Math.round(avgF.reduce((a,b)=>a+b,0)/avgF.length)} mg/dL`:'',
     avgP.length?`【餐后均值】${Math.round(avgP.reduce((a,b)=>a+b,0)/avgP.length)} mg/dL`:'',
+    medLines.length?`【当前用药】\n${medLines.join('\n')}`:' ',
     notes?`【近期备注】${notes}`:''
   ].filter(Boolean).join('\n\n');
   if(!dataBlock){result.textContent='暂无足够数据，请先导入 CGM 数据或添加日常记录。';result.classList.add('show');return;}
