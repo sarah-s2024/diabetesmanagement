@@ -5,6 +5,7 @@ import { resolve } from 'path'
 import { copyFileSync } from 'fs'
 
 export default defineConfig({
+  base: '/diabetesmanagement/',
   plugins: [
     react(),
     tailwindcss(),
