@@ -528,14 +528,15 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
           <div class="meal-list" id="mealPlanList" style="margin-top:12px"></div>
         </div>
         <div id="dash-tab-exercise" class="dash-tab">
-          <div class="card-title">每周运动日历 (Zone 2)</div>
-          <p style="font-size:11px;color:var(--muted);margin-bottom:14px">中等强度有氧，心率维持在最大心率 60–70%</p>
-          <div class="chart-wrap" style="height:200px"><canvas id="exerciseChart"></canvas></div>
-          <div style="display:flex;gap:14px;margin-top:12px;font-size:10px;color:var(--muted)">
-            <span><span style="display:inline-block;width:8px;height:8px;background:var(--green);border-radius:2px;margin-right:4px;vertical-align:middle"></span>已完成</span>
-            <span><span style="display:inline-block;width:8px;height:8px;background:var(--accent);border-radius:2px;margin-right:4px;vertical-align:middle"></span>计划中</span>
-            <span><span style="display:inline-block;width:8px;height:8px;background:var(--surface3);border:1px solid var(--border);border-radius:2px;margin-right:4px;vertical-align:middle"></span>休息日</span>
+          <div class="chart-wrap" style="height:170px"><canvas id="exerciseChart"></canvas></div>
+          <div style="display:flex;gap:12px;margin-top:10px;margin-bottom:14px;font-size:10px;color:var(--muted);flex-wrap:wrap">
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(139,92,246,.8);border-radius:2px;margin-right:4px;vertical-align:middle"></span>力量训练</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(52,211,153,.75);border-radius:2px;margin-right:4px;vertical-align:middle"></span>有氧恢复</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(96,165,250,.75);border-radius:2px;margin-right:4px;vertical-align:middle"></span>主动恢复</span>
+            <span><span style="display:inline-block;width:8px;height:8px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:2px;margin-right:4px;vertical-align:middle"></span>休息日</span>
           </div>
+          <div class="card-title" style="margin-bottom:8px">每日计划 — 点击展开 · ▶ 查看示范视频</div>
+          <div class="ex-week-list" id="weeklyPlanList"></div>
         </div>
       </div>
 
