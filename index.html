@@ -889,11 +889,6 @@ function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi) {
     const st  = sd<=30?'波动低':sd<=50?'波动中':'波动大';
     cards.push({icon:'〰️', val:sd, name:'血糖变异', col, st, unit:'SD'});
   }
-  if (fasting != null) {
-    const col = fasting<=100?'var(--green)':fasting<=125?'var(--amber)':'var(--red)';
-    const st  = fasting<=100?'达标':fasting<=125?'偏高':'高';
-    cards.push({icon:'🌅', val:fasting, name:'空腹血糖', col, st, unit:'mg/dL'});
-  }
   if (hba1c != null) {
     const col = hba1c<6?'var(--green)':hba1c<7?'var(--amber)':'var(--red)';
     const st  = hba1c<6?'理想':hba1c<7?'良好':'偏高';
