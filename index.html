@@ -1113,7 +1113,9 @@ function renderDashboard() {
     const gmiAvg = allVals.reduce((a,b)=>a+b,0) / allVals.length;
     gmi = Math.round((3.31 + 0.02392 * gmiAvg) * 10) / 10;
 
-    const week = cgmData.filter(d => new Date(d.device_timestamp) >= new Date(Date.now()-7*86400000));
+    // Use last 7 days relative to most recent data point (handles historical uploads)
+    const lastTs = new Date(cgmData[cgmData.length-1].device_timestamp).getTime();
+    const week = cgmData.filter(d => new Date(d.device_timestamp).getTime() >= lastTs - 7*86400000);
     if (week.length) {
       const vals = week.map(d=>d.glucose_mg_dl);
       const inR = vals.filter(v=>v>=70&&v<=180).length;
