@@ -24,16 +24,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: react-app/package-lock.json
+          node-version: 22
 
       - name: Install & Build
         working-directory: react-app
         env:
           VITE_SECRET_KEY: ${{ secrets.VITE_SECRET_KEY }}
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Setup Pages
