@@ -27,7 +27,8 @@ function decrypt(ciphertext: string): string {
 export async function loadConfig(): Promise<AppConfig> {
   if (cached) return cached
   try {
-    const res = await fetch('/config.yaml')
+    const base = import.meta.env.BASE_URL || '/'
+    const res = await fetch(`${base}config.yaml`)
     if (!res.ok) throw new Error('config.yaml not found')
     const text = await res.text()
     const raw = yaml.load(text) as Record<string, string>
