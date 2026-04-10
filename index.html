@@ -1555,7 +1555,31 @@ function renderDashboard() {
   renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi);
   renderMedInline();
   renderInsights(tirPct, avg, sd, fasting, hba1c);
-  renderMealChart();
+
+  // Nutrition plan: show formula default immediately, update with AI when ready
+  const defaultPlan = buildDefaultPlan(totalKcal, kg);
+  const today = new Date().toISOString().slice(0,10);
+  const cachedPlan = JSON.parse(localStorage.getItem('dm_ai_nutrition')||'null');
+  if (cachedPlan && cachedPlan.date === today) {
+    renderMealChart(cachedPlan);
+    if (cachedPlan.exerciseFocus) updateExerciseFocus(cachedPlan.exerciseFocus);
+  } else {
+    renderMealChart(defaultPlan);
+    if (avg != null && kg && heightCm) {
+      const heightCmVal = parseFloat(localStorage.getItem(HEIGHT_KEY));
+      loadAiNutritionPlan({
+        weightKg: kg, heightCm: heightCmVal, bmi,
+        avg, tir: tirPct, sd, hba1c,
+        meds: getActiveMeds().map(m=>`${m.drug}${m.dose?' '+m.dose:''}`).join('；') || '无',
+        kcalBase: totalKcal
+      }).then(plan => {
+        if (plan) {
+          renderMealChart(plan);
+          if (plan.exerciseFocus) updateExerciseFocus(plan.exerciseFocus);
+        }
+      });
+    }
+  }
   renderExerciseChart();
 }
 
