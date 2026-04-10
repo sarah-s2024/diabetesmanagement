@@ -1809,7 +1809,7 @@ async function getAiAnalysis(){
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-opus-4-6',max_tokens:1500,stream:true,
-        system:'你是一位专业的糖尿病健康顾问。请根据用户提供的近三个月健康数据，用中文给出清晰详细的分析建议。分析必须包含以下四个部分：\n①数据解读：解读近三个月血糖趋势、HbA1c、体重等各项指标变化\n②风险提示：指出当前数据中存在的潜在健康风险\n③饮食/运动建议：结合数据给出具体可行的建议\n④下次就诊关注点：列出下次看诊时需要重点讨论的问题\n\n最后注明：本分析仅供参考，不构成医疗诊断，请遵医嘱。',
+        system:'你是一位专业的糖尿病健康顾问。请根据用户提供的近三个月健康数据（含用药情况），用中文给出清晰详细的分析建议。分析必须包含以下四个部分：\n①数据解读：解读近三个月血糖趋势、HbA1c、体重等各项指标变化，并结合当前用药分析控糖效果\n②风险提示：指出当前数据和用药方案中存在的潜在健康风险（如低血糖风险、药物副作用关注点等）\n③饮食/运动建议：结合数据和用药给出具体可行的建议（例如 GLP-1 用药期间的饮食要点）\n④下次就诊关注点：列出下次看诊时需要重点讨论的问题，包括用药调整建议\n\n最后注明：本分析仅供参考，不构成医疗诊断，请遵医嘱。',
         messages:[{role:'user',content:`以下是我近三个月的糖尿病健康数据，请帮我全面分析：\n\n${dataBlock}`}]})
     });
     if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${resp.status}`);}
