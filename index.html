@@ -898,14 +898,6 @@ function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi) {
     const st  = hba1c<6?'理想':hba1c<7?'良好':'偏高';
     cards.push({icon:'🩸', val:hba1c+'%', name:'HbA1c', col, st});
   }
-  if (bmi != null) {
-    const col = bmi<18.5?'var(--blue)':bmi<25?'var(--green)':bmi<30?'var(--amber)':'var(--red)';
-    const st  = bmi<18.5?'偏瘦':bmi<25?'正常':bmi<30?'超重':'肥胖';
-    cards.push({icon:'⚖️', val:Math.round(bmi*10)/10, name:'BMI', col, st});
-  }
-  if (weightLbs != null) {
-    cards.push({icon:'🏋️', val:weightLbs, name:'体重', col:'var(--text)', st:'', unit:'lbs'});
-  }
 
   document.getElementById('contribScroll').innerHTML = cards.map(c => `
     <div class="contrib-card" title="${c.tooltip||''}">
