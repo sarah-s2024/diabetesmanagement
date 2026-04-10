@@ -1,9 +1,14 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { Chart as ChartJS, registerables } from 'chart.js'
+import { Bar } from 'react-chartjs-2'
 import Card from '../components/Card'
 import { useApp } from '../contexts/AppContext'
 import { getConfig } from '../lib/config'
 import { getActiveMeds } from '../lib/storage'
+import { WEEK_PLAN } from '../lib/constants'
+
+ChartJS.register(...registerables)
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -211,6 +216,9 @@ export default function Dashboard() {
         </Card>
       )}
 
+      {/* Meal & Exercise tabs */}
+      <MealExerciseCard />
+
       {/* AI Analysis */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -229,5 +237,183 @@ export default function Dashboard() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+/* ── Meal Plan & Exercise Card ── */
+const MEALS = [
+  { name: '早餐', time: '08:00', kcal: 360, p: 26, f: 18, c: 24, tag: '蛋白质优先',
+    foods: '2全蛋 + 额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄' },
+  { name: '加餐', time: '10:30', kcal: 175, p: 26, f: 7, c: 4, tag: '补充蛋白',
+    foods: '蛋白粉1勺（30g）· 混合坚果10g' },
+  { name: '午餐', time: '13:00', kcal: 443, p: 54, f: 10, c: 36, tag: '碳水高峰',
+    foods: '鸡胸肉150g · 糙米饭100g · 西兰花150g · 橄榄油1茶匙' },
+  { name: '加餐', time: '14:30', kcal: 156, p: 33, f: 2, c: 3, tag: '双倍蛋白',
+    foods: '蛋白粉1勺 · 胶原蛋白肽1勺' },
+  { name: '晚餐', time: '17:30', kcal: 428, p: 42, f: 17, c: 28, tag: '控碳稳糖',
+    foods: '三文鱼130g · 烤红薯80g · 芦笋150g · 嫩豆腐80g' },
+]
+
+const TYPE_COLORS: Record<string, string> = {
+  strength: 'rgba(200,169,125,0.7)',
+  cardio: 'rgba(92,184,138,0.6)',
+  yoga: 'rgba(107,159,212,0.6)',
+  rest: 'rgba(255,255,255,0.04)',
+}
+
+function MealExerciseCard() {
+  const [tab, setTab] = useState<'meal' | 'exercise'>('meal')
+  const [expandedDay, setExpandedDay] = useState<number | null>(null)
+  const todayDow = new Date().getDay()
+
+  // Auto-expand today
+  useEffect(() => {
+    if (tab === 'exercise') {
+      const idx = WEEK_PLAN.findIndex(d => d.dow === todayDow)
+      if (idx >= 0 && WEEK_PLAN[idx].exercises.length) setExpandedDay(idx)
+    }
+  }, [tab, todayDow])
+
+  const mealChartData = {
+    labels: MEALS.map(m => m.name),
+    datasets: [
+      { label: '蛋白质', data: MEALS.map(m => m.p), backgroundColor: 'rgba(200,169,125,0.75)', borderRadius: 4, stack: 'm' },
+      { label: '脂肪', data: MEALS.map(m => m.f), backgroundColor: 'rgba(212,168,75,0.6)', borderRadius: 0, stack: 'm' },
+      { label: '碳水', data: MEALS.map(m => m.c), backgroundColor: 'rgba(107,159,212,0.6)', borderRadius: 4, stack: 'm' },
+    ]
+  }
+
+  const exerciseChartData = {
+    labels: WEEK_PLAN.map(d => d.name),
+    datasets: [{
+      data: WEEK_PLAN.map(d => d.duration || 5),
+      backgroundColor: WEEK_PLAN.map(d => TYPE_COLORS[d.type]),
+      borderRadius: 8, barPercentage: 0.6,
+    }]
+  }
+
+  const chartOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: tab === 'meal' ? { display: true, position: 'top' as const, labels: { color: '#7a756b', font: { size: 10 }, boxWidth: 8, padding: 12 } } : { display: false },
+    },
+    scales: {
+      y: { stacked: tab === 'meal', ticks: { color: '#7a756b', font: { size: 10 }, callback: (v: number) => v + (tab === 'meal' ? 'g' : '分') }, grid: { color: 'rgba(200,169,125,0.04)' }, border: { display: false } },
+      x: { stacked: tab === 'meal', ticks: { color: '#7a756b', font: { size: 10 } }, grid: { display: false } },
+    }
+  }
+
+  const totalKcal = MEALS.reduce((s, m) => s + m.kcal, 0)
+  const totalP = MEALS.reduce((s, m) => s + m.p, 0)
+
+  return (
+    <Card>
+      {/* Tab */}
+      <div className="flex mb-4 border-b border-border">
+        {[{id: 'meal' as const, label: '膳食计划'}, {id: 'exercise' as const, label: '运动日历'}].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`flex-1 pb-2.5 text-xs border-none bg-transparent cursor-pointer transition-all duration-300
+              ${tab === t.id ? 'text-gold font-medium' : 'text-muted'}`}
+            style={tab === t.id ? { borderBottom: '2px solid var(--color-gold)', marginBottom: '-1px' } : {}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'meal' ? (
+        <>
+          <div className="text-[11px] text-muted mb-3">全日 ~{totalKcal} kcal · 蛋白 ~{totalP}g</div>
+          <div className="h-[200px]">
+            <Bar data={mealChartData} options={chartOpts as any} />
+          </div>
+          {/* Macro strip */}
+          <div className="flex gap-4 mt-3 mb-4 text-[11px]">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-gold/75" />蛋白 {totalP}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-amber/60" />脂肪 {MEALS.reduce((s,m)=>s+m.f,0)}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-blue/60" />碳水 {MEALS.reduce((s,m)=>s+m.c,0)}g</span>
+          </div>
+          {/* Meal cards */}
+          <div className="space-y-2">
+            {MEALS.map((m, i) => (
+              <div key={i} className="bg-surface2 border border-border rounded-xl p-3.5">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{m.name}</span>
+                    <span className="text-[10px] text-muted bg-surface3 px-2 py-0.5 rounded-md">{m.time}</span>
+                    <span className="text-[10px] text-gold/80 bg-gold/8 px-2 py-0.5 rounded-md">{m.tag}</span>
+                  </div>
+                  <span className="text-xs font-medium text-gold">{m.kcal} kcal</span>
+                </div>
+                <div className="text-[11px] text-muted leading-relaxed">{m.foods}</div>
+                <div className="flex gap-3 mt-2 text-[10px]">
+                  <span className="text-gold/80">蛋白 {m.p}g</span>
+                  <span className="text-amber/80">脂肪 {m.f}g</span>
+                  <span className="text-blue/80">碳水 {m.c}g</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="h-[160px] mb-3">
+            <Bar data={exerciseChartData} options={{ ...chartOpts, plugins: { legend: { display: false } } } as any} />
+          </div>
+          {/* Legend */}
+          <div className="flex gap-3 mb-4 text-[10px] text-muted flex-wrap">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-gold/70" />力量训练</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-green/60" />有氧恢复</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-blue/60" />主动恢复</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-surface3 border border-border" />休息</span>
+          </div>
+          {/* Day list */}
+          <div>
+            {WEEK_PLAN.map((day, idx) => {
+              const isToday = day.dow === todayDow
+              const open = expandedDay === idx
+              return (
+                <div key={idx}>
+                  <div
+                    onClick={() => day.exercises.length && setExpandedDay(open ? null : idx)}
+                    className={`flex items-center gap-3 py-3 border-b border-border2 cursor-pointer transition-colors ${day.exercises.length ? 'hover:bg-surface2' : ''}`}
+                  >
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base"
+                      style={{ background: TYPE_COLORS[day.type] + '20' }}>{day.icon}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium flex items-center gap-2">
+                        {day.name}
+                        {isToday && <span className="text-[9px] text-gold bg-gold/10 px-2 py-0.5 rounded font-semibold">今日</span>}
+                      </div>
+                      <div className="text-[11px] text-muted">{day.label}{day.intensity !== '—' ? ' · ' + day.intensity : ''}</div>
+                    </div>
+                    <span className="text-xs text-muted">{day.duration ? day.duration + '分' : '—'}</span>
+                    {day.exercises.length > 0 && (
+                      <span className={`text-muted text-xs transition-transform duration-200 ${open ? 'rotate-90' : ''}`}>›</span>
+                    )}
+                  </div>
+                  {open && day.exercises.length > 0 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      className="pl-12 pb-2 overflow-hidden"
+                    >
+                      <div className="text-[11px] text-muted mb-2 leading-relaxed">{day.desc}</div>
+                      {day.exercises.map((ex, ei) => (
+                        <div key={ei} className="flex items-center justify-between py-2 border-b border-border2 last:border-b-0">
+                          <div>
+                            <div className="text-xs font-medium">{ex.name}</div>
+                            <div className="text-[10px] text-muted">{ex.detail}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </Card>
   )
 }
