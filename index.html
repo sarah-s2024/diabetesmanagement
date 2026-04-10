@@ -1648,6 +1648,114 @@ function exportCSV(){
   a.click();
 }
 
+// ─── Medication management ───
+const MED_CAT_ICON = {
+  'GLP-1 受体激动剂':'💉',
+  'GIP/GLP-1 双重激动剂':'💉',
+  'SGLT2 抑制剂':'💊',
+  '传统经典用药（二甲双胍等）':'💊',
+  '其他':'🩺',
+};
+
+function getMeds() {
+  try { return JSON.parse(localStorage.getItem(MEDS_KEY)||'[]'); } catch { return []; }
+}
+function saveMeds(meds) { localStorage.setItem(MEDS_KEY, JSON.stringify(meds)); }
+function getActiveMeds() {
+  const today = new Date().toISOString().slice(0,10);
+  return getMeds().filter(m => !m.stopDate || m.stopDate >= today);
+}
+
+function updateMedDrugList() {
+  const cat = document.getElementById('med-cat').value;
+  const sel = document.getElementById('med-drug');
+  const drugs = MED_DRUGS[cat] || [];
+  sel.innerHTML = drugs.length
+    ? drugs.map(d=>`<option value="${d}">${d}</option>`).join('')
+    : '<option value="">请先选择类别</option>';
+}
+
+function addMedication() {
+  const cat   = document.getElementById('med-cat').value;
+  const drug  = document.getElementById('med-drug').value;
+  const dose  = document.getElementById('med-dose').value.trim();
+  const start = document.getElementById('med-start').value;
+  const stop  = document.getElementById('med-stop').value;
+  const msg   = document.getElementById('medMsg');
+
+  if (!cat || !drug) { msg.style.color='var(--red)'; msg.textContent='请选择药物类别和药物名称'; return; }
+  if (!start)        { msg.style.color='var(--red)'; msg.textContent='请填写开始日期'; return; }
+
+  const meds = getMeds();
+  meds.unshift({ id: Date.now(), cat, drug, dose, startDate: start, stopDate: stop || null });
+  saveMeds(meds);
+  msg.style.color='var(--green)'; msg.textContent='✅ 药物已添加';
+  // reset form
+  ['med-cat','med-drug','med-dose','med-start','med-stop'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('med-drug').innerHTML='<option value="">请先选择类别</option>';
+  renderMedList();
+  renderMedDashTab();
+  setTimeout(()=>msg.textContent='', 3000);
+}
+
+function stopMedication(id) {
+  const today = new Date().toISOString().slice(0,10);
+  const meds = getMeds().map(m => m.id===id ? {...m, stopDate: today} : m);
+  saveMeds(meds); renderMedList(); renderMedDashTab();
+}
+
+function deleteMedication(id) {
+  saveMeds(getMeds().filter(m => m.id!==id));
+  renderMedList(); renderMedDashTab();
+}
+
+function renderMedList() {
+  const el = document.getElementById('medRecordList');
+  if (!el) return;
+  const meds = getMeds();
+  if (!meds.length) { el.innerHTML='<div class="med-empty">暂无药物记录，请在上方添加</div>'; return; }
+  const today = new Date().toISOString().slice(0,10);
+  el.innerHTML = meds.map(m => {
+    const active = !m.stopDate || m.stopDate >= today;
+    const icon = MED_CAT_ICON[m.cat] || '💊';
+    return `<div class="med-card">
+      <div class="med-icon">${icon}</div>
+      <div class="med-body">
+        <div class="med-cat">${m.cat}</div>
+        <div class="med-name">${m.drug}</div>
+        <span class="${active?'med-active':'med-stopped'}">${active?'使用中':'已停药'}</span>
+        <div class="med-meta">
+          ${m.dose?'<b>剂量：</b>'+m.dose+'<br>':''}
+          <b>开始：</b>${m.startDate}
+          ${m.stopDate?'<br><b>停药：</b>'+m.stopDate:''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        ${active?`<button class="med-stop-btn" onclick="stopMedication(${m.id})">停药</button>`:''}
+        <button class="med-del-btn" onclick="deleteMedication(${m.id})">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMedDashTab() {
+  const el = document.getElementById('medDashList');
+  if (!el) return;
+  const active = getActiveMeds();
+  if (!active.length) { el.innerHTML='<div class="med-empty">暂无使用中的药物</div>'; return; }
+  el.innerHTML = active.map(m => {
+    const icon = MED_CAT_ICON[m.cat] || '💊';
+    return `<div class="med-card">
+      <div class="med-icon">${icon}</div>
+      <div class="med-body">
+        <div class="med-cat">${m.cat}</div>
+        <div class="med-name">${m.drug}</div>
+        <div class="med-meta">${m.dose?'<b>剂量：</b>'+m.dose+'<br>':''}<b>开始：</b>${m.startDate}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ─── AI Analysis ───
 async function getAiAnalysis(){
   const apiKey=localStorage.getItem(CLAUDE_KEY_KEY);
