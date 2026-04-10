@@ -1107,6 +1107,12 @@ function renderDashboard() {
     const last = cgmData[cgmData.length-1];
     renderNowCard(Math.round(last.glucose_mg_dl), last.device_timestamp);
 
+    // GMI from all available data (Bergenstal 2018: GMI% = 3.31 + 0.02392 × mean mg/dL)
+    // Uses all loaded CGM data — better accuracy with more days
+    const allVals = cgmData.map(d=>d.glucose_mg_dl);
+    const gmiAvg = allVals.reduce((a,b)=>a+b,0) / allVals.length;
+    gmi = Math.round((3.31 + 0.02392 * gmiAvg) * 10) / 10;
+
     const week = cgmData.filter(d => new Date(d.device_timestamp) >= new Date(Date.now()-7*86400000));
     if (week.length) {
       const vals = week.map(d=>d.glucose_mg_dl);
@@ -1116,11 +1122,6 @@ function renderDashboard() {
       tirPct = Math.round(inR/vals.length*100);
       avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
       sd = Math.round(Math.sqrt(vals.reduce((a,b)=>a+(b-avg)**2,0)/vals.length));
-      // GMI: use all available CGM data (>=14 days recommended)
-      // Formula: GMI(%) = 3.31 + 0.02392 × mean_glucose_mg_dL  (Bergenstal 2018)
-      const gmiBase = cgmData.length >= 100 ? cgmData : week; // prefer more data
-      const gmiAvg = gmiBase.reduce((a,b)=>a+b.glucose_mg_dl,0) / gmiBase.length;
-      gmi = Math.round((3.31 + 0.02392 * gmiAvg) * 10) / 10;
       const lp = Math.round(low/vals.length*100);
       const hp = Math.round(high/vals.length*100);
       const ip = 100-lp-hp;
