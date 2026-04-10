@@ -557,6 +557,13 @@ main{padding:0 18px 16px;max-width:640px;margin:0 auto}
         </div>
       </div>
 
+        <div id="dash-tab-meds" class="dash-tab">
+          <div class="card-title" style="margin-bottom:6px">正在使用的药物</div>
+          <div id="medDashList"></div>
+          <button class="btn" style="width:100%;margin-top:10px;font-size:12px" onclick="showPage('record',document.querySelector('.nav-tab:nth-child(3)'));setTimeout(()=>document.getElementById('med-section').scrollIntoView({behavior:'smooth'}),200)">+ 管理用药</button>
+        </div>
+      </div>
+
       <!-- AI Analysis -->
       <div class="card">
         <div class="card-title">AI 深度分析</div>
