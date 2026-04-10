@@ -876,7 +876,7 @@ function renderRing(tirPct) {
 }
 
 // ─── Contributor cards ───
-function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi) {
+function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi, gmi) {
   const cards = [];
 
   if (tirPct != null) {
@@ -888,6 +888,11 @@ function renderContribs(tirPct, avg, fasting, hba1c, sd, weightLbs, bmi) {
     const col = avg<=140?'var(--green)':avg<=180?'var(--amber)':'var(--red)';
     const st  = avg<=140?'正常':avg<=180?'偏高':'高';
     cards.push({icon:'📊', val:avg, name:'CGM均值', col, st, unit:'mg/dL'});
+  }
+  if (gmi != null) {
+    const col = gmi<6?'var(--green)':gmi<7?'var(--amber)':'var(--red)';
+    const st  = gmi<6?'理想':gmi<7?'良好':'偏高';
+    cards.push({icon:'🧮', val:gmi+'%', name:'GMI', col, st, tooltip:'由CGM均值估算'});
   }
   if (sd != null) {
     const col = sd<=30?'var(--green)':sd<=50?'var(--amber)':'var(--red)';
