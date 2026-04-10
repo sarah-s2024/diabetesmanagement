@@ -19,144 +19,88 @@ export default function LockScreen() {
     setError(msg); setShake(true); setTimeout(() => setShake(false), 500)
   }
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     setLoading(true); setError('')
     try {
-      const user = await login(username, password)
+      const user = tab === 'login'
+        ? await login(username, password)
+        : await register(username, password, displayName)
       onLogin(user)
-    } catch (e: any) {
-      showError(e.message)
-    }
+    } catch (e: any) { showError(e.message) }
     setLoading(false)
   }
 
-  const handleRegister = async () => {
-    setLoading(true); setError('')
-    try {
-      const user = await register(username, password, displayName)
-      onLogin(user)
-    } catch (e: any) {
-      showError(e.message)
-    }
-    setLoading(false)
-  }
-
-  const handleSubmit = () => tab === 'login' ? handleLogin() : handleRegister()
+  const inputCls = "w-full p-3.5 border border-border rounded-2xl text-sm bg-surface2 text-text outline-none transition-all duration-300 placeholder:text-muted2 focus:border-gold/40 focus:bg-surface3 focus:shadow-[0_0_0_3px_rgba(200,169,125,0.08)]"
 
   return (
     <div className="fixed inset-0 bg-bg flex items-center justify-center z-[999]">
-      {/* Background glows */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-accent/10 blur-[120px]" />
-        <div className="absolute bottom-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-green/8 blur-[100px]" />
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-gold/[0.04] blur-[150px]" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1, x: shake ? [0, -10, 10, -10, 10, 0] : 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative w-[360px]"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0, x: shake ? [0, -8, 8, -8, 8, 0] : 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-[340px]"
       >
-        <div className="bg-gradient-to-br from-surface/98 to-bg/99 border border-accent/20 rounded-[28px] p-10 shadow-2xl backdrop-blur-xl">
-          {/* Icon + Title */}
-          <div className="text-center mb-6">
-            <div className="text-5xl mb-3 drop-shadow-[0_0_24px_rgba(139,92,246,0.6)]">💉</div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-300 via-accent to-green bg-clip-text text-transparent">
-              血糖管理
-            </h2>
+        <div className="flex justify-center mb-8">
+          <div className="relative w-20 h-20">
+            <svg viewBox="0 0 80 80" className="w-full h-full">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(200,169,125,0.15)" strokeWidth="3" />
+              <circle cx="40" cy="40" r="34" fill="none" stroke="url(#lockGold)" strokeWidth="3"
+                strokeDasharray="160 214" strokeLinecap="round" className="origin-center -rotate-90" />
+              <defs>
+                <linearGradient id="lockGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#c8a97d" />
+                  <stop offset="100%" stopColor="#8b7355" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center text-2xl">💉</div>
           </div>
-
-          {/* Tab switcher */}
-          <div className="flex gap-0.5 mb-5 bg-surface2 rounded-xl p-0.5">
-            {(['login', 'register'] as Tab[]).map(t => (
-              <button
-                key={t}
-                onClick={() => { setTab(t); setError('') }}
-                className={`flex-1 py-2 text-sm rounded-[10px] border-none cursor-pointer font-medium transition-all
-                  ${tab === t ? 'bg-surface text-text shadow-[0_1px_6px_rgba(0,0,0,0.35)]' : 'bg-transparent text-muted'}`}
-              >
-                {t === 'login' ? '登录' : '注册'}
-              </button>
-            ))}
-          </div>
-
-          {/* Form fields */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0, x: tab === 'login' ? -10 : 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: tab === 'login' ? 10 : -10 }}
-              transition={{ duration: 0.15 }}
-              className="space-y-3"
-            >
-              <div>
-                <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">用户名</label>
-                <input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  placeholder="输入用户名"
-                  className="w-full p-3 border border-border rounded-[12px] text-sm bg-surface2 text-text outline-none transition-all focus:border-accent focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
-                />
-              </div>
-
-              {tab === 'register' && (
-                <div>
-                  <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">显示名称（可选）</label>
-                  <input
-                    value={displayName}
-                    onChange={e => setDisplayName(e.target.value)}
-                    placeholder="您的昵称"
-                    className="w-full p-3 border border-border rounded-[12px] text-sm bg-surface2 text-text outline-none transition-all focus:border-accent focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">密码</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                  placeholder={tab === 'register' ? '至少 4 位' : '输入密码'}
-                  className="w-full p-3 border border-border rounded-[12px] text-sm bg-surface2 text-text outline-none transition-all focus:border-accent focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
-                />
-              </div>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Submit button */}
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full mt-5 p-3.5 bg-gradient-to-r from-accent to-purple-700 text-white border-none rounded-[14px] text-[15px] font-semibold cursor-pointer shadow-[0_6px_24px_rgba(139,92,246,0.45)] transition-all duration-200 active:scale-[0.98] hover:shadow-[0_8px_32px_rgba(139,92,246,0.55)] disabled:opacity-50"
-          >
-            {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                {tab === 'login' ? '登录中...' : '注册中...'}
-              </span>
-            ) : (
-              tab === 'login' ? '登录' : '注册并登录'
-            )}
-          </button>
-
-          {/* Error */}
-          {error && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-red text-xs mt-3 text-center"
-            >{error}</motion.p>
-          )}
-
-          {/* Footer hint */}
-          <p className="text-[11px] text-muted2 text-center mt-5 leading-relaxed">
-            {tab === 'login' ? '没有账户？点击上方「注册」创建' : '已有账户？点击上方「登录」'}
-          </p>
         </div>
+
+        <h2 className="text-center text-xl font-semibold tracking-tight text-text mb-1">血糖管理</h2>
+        <p className="text-center text-xs text-muted mb-8">个人健康数据平台</p>
+
+        <div className="flex mb-6 border-b border-border">
+          {(['login', 'register'] as Tab[]).map(t => (
+            <button key={t} onClick={() => { setTab(t); setError('') }}
+              className={`flex-1 pb-3 text-sm border-none bg-transparent cursor-pointer transition-all duration-300
+                ${tab === t ? 'text-gold font-medium' : 'text-muted'}`}
+              style={tab === t ? { borderBottom: '2px solid var(--color-gold)', marginBottom: '-1px' } : {}}>
+              {t === 'login' ? '登录' : '注册'}
+            </button>
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="space-y-3.5">
+            <input value={username} onChange={e => setUsername(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()} placeholder="用户名" className={inputCls} />
+            {tab === 'register' && (
+              <input value={displayName} onChange={e => setDisplayName(e.target.value)}
+                placeholder="显示名称（可选）" className={inputCls} />
+            )}
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              placeholder={tab === 'register' ? '密码（至少 4 位）' : '密码'} className={inputCls} />
+          </motion.div>
+        </AnimatePresence>
+
+        <button onClick={handleSubmit} disabled={loading}
+          className="w-full mt-6 p-3.5 bg-gradient-to-r from-gold to-[#a08560] text-bg border-none rounded-2xl text-sm font-semibold cursor-pointer shadow-[0_8px_32px_rgba(200,169,125,0.25)] transition-all duration-300 active:scale-[0.98] hover:shadow-[0_12px_40px_rgba(200,169,125,0.35)] disabled:opacity-50">
+          {loading ? '请稍候...' : tab === 'login' ? '登录' : '注册并登录'}
+        </button>
+
+        {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          className="text-red text-xs mt-3.5 text-center">{error}</motion.p>}
+
+        <p className="text-[11px] text-muted2 text-center mt-6">
+          {tab === 'login' ? '没有账户？切换到「注册」' : '已有账户？切换到「登录」'}
+        </p>
       </motion.div>
     </div>
   )

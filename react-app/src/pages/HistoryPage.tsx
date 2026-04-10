@@ -19,29 +19,29 @@ export default function HistoryPage() {
     if (tab === 'glucose') return {
       labels,
       datasets: [
-        { label: '空腹', data: sorted.map(r => r.fasting_glucose), borderColor: '#8b5cf6', tension: 0.3, pointRadius: 3, borderWidth: 2 },
-        { label: '餐后', data: sorted.map(r => r.post_meal_glucose), borderColor: '#34d399', tension: 0.3, pointRadius: 3, borderWidth: 2 },
+        { label: '空腹', data: sorted.map(r => r.fasting_glucose), borderColor: '#c8a97d', tension: 0.3, pointRadius: 3, borderWidth: 2 },
+        { label: '餐后', data: sorted.map(r => r.post_meal_glucose), borderColor: '#5cb88a', tension: 0.3, pointRadius: 3, borderWidth: 2 },
       ]
     }
     if (tab === 'bp') return {
       labels,
       datasets: [
-        { label: '收缩压', data: sorted.map(r => r.systolic_bp), borderColor: '#f87171', tension: 0.3, pointRadius: 3, borderWidth: 2 },
-        { label: '舒张压', data: sorted.map(r => r.diastolic_bp), borderColor: '#60a5fa', tension: 0.3, pointRadius: 3, borderWidth: 2 },
+        { label: '收缩压', data: sorted.map(r => r.systolic_bp), borderColor: '#e06464', tension: 0.3, pointRadius: 3, borderWidth: 2 },
+        { label: '舒张压', data: sorted.map(r => r.diastolic_bp), borderColor: '#6b9fd4', tension: 0.3, pointRadius: 3, borderWidth: 2 },
       ]
     }
     return {
       labels,
-      datasets: [{ label: '体重(lbs)', data: sorted.map(r => r.weight_lbs), borderColor: '#fbbf24', tension: 0.3, pointRadius: 3, borderWidth: 2 }]
+      datasets: [{ label: '体重(lbs)', data: sorted.map(r => r.weight_lbs), borderColor: '#d4a84b', tension: 0.3, pointRadius: 3, borderWidth: 2 }]
     }
   }, [dailyRecords, tab])
 
   const chartOpts = {
     responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: '#6b7691', font: { size: 10 } } } },
+    plugins: { legend: { labels: { color: '#7a756b', font: { size: 10 } } } },
     scales: {
-      y: { ticks: { color: '#6b7691', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' }, border: { display: false } },
-      x: { ticks: { color: '#6b7691', font: { size: 10 } }, grid: { display: false } },
+      y: { ticks: { color: '#7a756b', font: { size: 10 } }, grid: { color: 'rgba(200,169,125,0.04)' }, border: { display: false } },
+      x: { ticks: { color: '#7a756b', font: { size: 10 } }, grid: { display: false } },
     }
   }
 

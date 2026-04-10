@@ -230,7 +230,7 @@ export default function AgentChat() {
           <motion.button
             initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px)+16px)] right-4 w-[54px] h-[54px] rounded-full border-none bg-gradient-to-br from-accent to-purple-800 text-white text-2xl shadow-[0_4px_20px_rgba(124,92,246,0.3)] cursor-pointer z-[800] flex items-center justify-center active:scale-90 transition-transform"
+            className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px)+16px)] right-4 w-[52px] h-[52px] rounded-full border border-gold/20 bg-surface text-gold shadow-[0_4px_24px_rgba(200,169,125,0.15)] cursor-pointer z-[800] flex items-center justify-center active:scale-90 transition-transform hover:bg-surface2"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </motion.button>
@@ -254,7 +254,7 @@ export default function AgentChat() {
                 {activeSessionId ? sessions.find(s => s.id === activeSessionId)?.title || 'AI 健康助手' : 'AI 健康助手'}
               </h3>
               <button onClick={startNewChat}
-                className="px-2.5 py-1 rounded-lg bg-accent/10 text-accent text-xs font-semibold cursor-pointer border-none hover:bg-accent/20">
+                className="px-2.5 py-1 rounded-lg bg-gold/10 text-gold text-xs font-medium cursor-pointer border-none hover:bg-gold/20">
                 + 新对话
               </button>
               <button onClick={() => setOpen(false)}
@@ -286,10 +286,10 @@ export default function AgentChat() {
                           <div
                             key={s.id}
                             className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer border-b border-border2 transition-colors group
-                              ${s.id === activeSessionId ? 'bg-accent/10' : 'hover:bg-surface2'}`}
+                              ${s.id === activeSessionId ? 'bg-gold/10' : 'hover:bg-surface2'}`}
                           >
                             <div className="flex-1 min-w-0" onClick={() => selectSession(s)}>
-                              <div className={`text-sm truncate ${s.id === activeSessionId ? 'font-semibold text-accent' : 'text-text'}`}>
+                              <div className={`text-sm truncate ${s.id === activeSessionId ? 'font-semibold text-gold' : 'text-text'}`}>
                                 {s.title}
                               </div>
                               <div className="text-[10px] text-muted mt-0.5">{formatTime(s.updated_at)}</div>
@@ -310,8 +310,8 @@ export default function AgentChat() {
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
                 {messages.map((m, i) => (
                   <div key={i} className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words
-                    ${m.role === 'user' ? 'self-end bg-accent text-white rounded-br-sm' :
-                      m.role === 'tool' ? 'self-start bg-surface3 text-muted text-[11px] border-l-[3px] border-accent px-2.5 py-1.5 font-mono whitespace-pre-wrap max-h-[120px] overflow-y-auto max-w-[92%]' :
+                    ${m.role === 'user' ? 'self-end bg-gold/90 text-bg rounded-br-sm' :
+                      m.role === 'tool' ? 'self-start bg-surface3 text-muted text-[11px] border-l-[3px] border-gold/40 px-2.5 py-1.5 font-mono whitespace-pre-wrap max-h-[120px] overflow-y-auto max-w-[92%]' :
                       'self-start bg-surface2 text-text rounded-bl-sm'}`}
                   >
                     {m.role === 'assistant' ? <div className="whitespace-pre-wrap">{m.content}</div> : m.content}
@@ -340,7 +340,7 @@ export default function AgentChat() {
                 className="flex-1 bg-surface2 border border-border rounded-xl text-text py-2.5 px-3 text-sm resize-none min-h-[40px] max-h-[120px] font-inherit leading-normal outline-none"
               />
               <button onClick={send} disabled={busy}
-                className="w-10 h-10 rounded-full border-none bg-accent text-white text-lg cursor-pointer flex-shrink-0 flex items-center justify-center self-end disabled:opacity-40">
+                className="w-10 h-10 rounded-full border-none bg-gold text-bg text-lg cursor-pointer flex-shrink-0 flex items-center justify-center self-end disabled:opacity-40">
                 ↑
               </button>
             </div>

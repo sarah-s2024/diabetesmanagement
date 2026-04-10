@@ -104,7 +104,7 @@ export default function AiAnalysisPage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div>
-          <h2 className="text-[17px] font-bold">AI 健康分析</h2>
+          <h2 className="text-[17px] font-semibold">AI 健康分析</h2>
           <p className="text-[11px] text-muted mt-0.5">基于你的健康数据生成</p>
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function AiAnalysisPage() {
         />
         <div className="flex gap-2">
           <button onClick={() => runAnalysis()} disabled={loading}
-            className="flex-1 py-3 bg-gradient-to-r from-accent to-purple-700 text-white border-none rounded-[14px] text-[15px] font-semibold cursor-pointer shadow-[0_6px_24px_rgba(139,92,246,0.35)] disabled:opacity-50 active:scale-[0.98]">
+            className="flex-1 py-3 bg-gradient-to-r from-gold to-[#a08560] text-bg border-none rounded-[14px] text-[15px] font-semibold cursor-pointer shadow-[0_6px_24px_rgba(200,169,125,0.2)] disabled:opacity-50 active:scale-[0.98]">
             {loading ? '分析中...' : '✨ 开始分析'}
           </button>
           <button onClick={() => runAnalysis('请全面分析我近三个月的健康数据，包括数据解读、风险提示、饮食运动建议、下次就诊关注点')} disabled={loading}
@@ -147,7 +147,7 @@ export default function AiAnalysisPage() {
           <div className="flex items-center gap-2 mb-3">
             <span className="text-base">🤖</span>
             <span className="text-sm font-semibold">AI 分析结果</span>
-            {loading && <span className="ml-auto text-[11px] text-accent animate-pulse">生成中...</span>}
+            {loading && <span className="ml-auto text-[11px] text-gold animate-pulse">生成中...</span>}
           </div>
           <div ref={resultRef} className="text-sm leading-relaxed whitespace-pre-wrap min-h-[60px] max-h-[60vh] overflow-y-auto">
             {result || <span className="text-muted">等待 AI 响应...</span>}

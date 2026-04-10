@@ -65,7 +65,7 @@ export default function RecordPage() {
 
   const drugs = MED_DRUGS[cat] || []
   const today = new Date().toISOString().slice(0, 10)
-  const fieldClass = "w-full py-2.5 px-3 border border-border rounded-[10px] text-sm bg-surface2 text-text outline-none transition-all focus:border-accent focus:bg-surface3"
+  const fieldClass = "w-full py-2.5 px-3 border border-border rounded-[10px] text-sm bg-surface2 text-text outline-none transition-all focus:border-gold/40 focus:bg-surface3"
 
   return (
     <div className="pb-4">
@@ -96,7 +96,7 @@ export default function RecordPage() {
           <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="饮食、运动、用药等情况..." className={`${fieldClass} resize-y min-h-16`} />
         </div>
         <div className="flex gap-2 mt-3.5">
-          <button onClick={saveRecord} className="py-2.5 px-5 rounded-xl text-sm font-medium cursor-pointer bg-gradient-to-r from-accent to-purple-700 text-white border-none shadow-[0_4px_16px_rgba(139,92,246,0.35)] active:scale-[0.97]">
+          <button onClick={saveRecord} className="py-2.5 px-5 rounded-xl text-sm font-medium cursor-pointer bg-gradient-to-r from-gold to-[#a08560] text-bg border-none shadow-[0_4px_16px_rgba(200,169,125,0.2)] active:scale-[0.97]">
             保存记录
           </button>
           <button onClick={() => { setFasting(''); setPostMeal(''); setSbp(''); setDbp(''); setWeight(''); setHba1c(''); setNotes('') }}
@@ -136,7 +136,7 @@ export default function RecordPage() {
               <input type="date" value={medStart} onChange={e => setMedStart(e.target.value)} className={fieldClass} />
             </div>
           </div>
-          <button onClick={addMed} className="mt-2.5 py-2 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-accent to-purple-700 text-white border-none cursor-pointer active:scale-[0.97]">
+          <button onClick={addMed} className="mt-2.5 py-2 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer active:scale-[0.97]">
             添加药物记录
           </button>
           {medMsg && <p className="text-xs mt-2">{medMsg}</p>}
@@ -151,7 +151,7 @@ export default function RecordPage() {
             <div key={m.id} className="bg-surface2 border border-border rounded-xl p-3.5 mb-2.5 flex items-start gap-3">
               <span className="text-[22px] flex-shrink-0 mt-0.5">💊</span>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] text-accent font-semibold uppercase tracking-wider mb-1">{m.cat}</div>
+                <div className="text-[10px] text-gold font-medium uppercase tracking-wider mb-1">{m.cat}</div>
                 <div className="text-sm font-semibold mb-0.5">{m.drug}</div>
                 <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded ${active ? 'bg-green-dim text-green' : 'bg-surface3 text-muted'}`}>
                   {active ? '使用中' : '已停药'}

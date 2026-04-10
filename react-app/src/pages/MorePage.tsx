@@ -136,13 +136,13 @@ export default function MorePage() {
         {/* User badge */}
         <div className="flex items-center gap-2 mb-3 text-xs">
           <span className="text-muted">上传到：</span>
-          <span className="inline-flex items-center gap-1.5 bg-accent/10 text-accent font-semibold px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+          <span className="inline-flex items-center gap-1.5 bg-gold/10 text-gold font-medium px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold" />
             {user?.display_name || user?.username}
           </span>
         </div>
 
-        <div className="bg-accent/8 border border-accent/20 rounded-xl p-3 text-xs text-accent/80 mb-3.5 leading-relaxed">
+        <div className="bg-gold/8 border border-gold/20 rounded-xl p-3 text-xs text-gold/80 mb-3.5 leading-relaxed">
           📋 <strong>Libre 3 CSV 导出：</strong> LibreView → 报告 → 导出数据 → 选择日期范围 → 下载 CSV
         </div>
 
@@ -153,12 +153,12 @@ export default function MorePage() {
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-[18px] p-8 text-center cursor-pointer transition-all
-            ${dragging ? 'border-accent bg-accent/10 scale-[1.01]' : 'border-accent/25 bg-accent/4 hover:border-accent hover:bg-accent/8'}`}
+            ${dragging ? 'border-gold bg-gold/10 scale-[1.01]' : 'border-gold/25 bg-gold/4 hover:border-gold hover:bg-gold/8'}`}
         >
           <input ref={fileRef} type="file" accept=".csv" className="hidden"
             onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
           <div className="text-4xl mb-3">{dragging ? '📥' : '📂'}</div>
-          <p className="text-sm text-muted"><strong className="text-accent">点击选择</strong> 或拖拽 CSV 文件到此处</p>
+          <p className="text-sm text-muted"><strong className="text-gold">点击选择</strong> 或拖拽 CSV 文件到此处</p>
           <p className="text-[11px] text-muted2 mt-1.5">支持 LibreView / LibreLink 导出的标准 CSV 格式</p>
         </div>
 
@@ -232,7 +232,7 @@ export default function MorePage() {
               {/* Action buttons */}
               <div className="flex gap-2">
                 <button onClick={upload} disabled={uploading || !!uploadStats}
-                  className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-accent to-purple-700 text-white border-none cursor-pointer disabled:opacity-50 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(124,92,246,0.3)]">
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer disabled:opacity-50 active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(200,169,125,0.2)]">
                   {uploading ? `上传中 ${uploadPct}%` : uploadStats ? '已上传' : '📤 上传到数据库'}
                 </button>
                 <button onClick={reset}

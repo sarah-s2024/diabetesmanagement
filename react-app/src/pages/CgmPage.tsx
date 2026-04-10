@@ -42,8 +42,8 @@ export default function CgmPage() {
     labels: data.map(d => new Date(d.device_timestamp).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })),
     datasets: [{
       data: data.map(d => d.glucose_mg_dl),
-      borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)',
-      fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2,
+      borderColor: '#c8a97d', backgroundColor: 'rgba(200,169,125,0.06)',
+      fill: true, tension: 0.35, pointRadius: 0, borderWidth: 1.5,
     }]
   }), [data])
 
@@ -54,9 +54,9 @@ export default function CgmPage() {
       tooltip: { mode: 'index' as const, intersect: false },
     },
     scales: {
-      y: { ticks: { color: '#6b7691', font: { size: 10 }, callback: (v: number) => v + '' }, grid: { color: 'rgba(255,255,255,0.04)' }, border: { display: false },
+      y: { ticks: { color: '#7a756b', font: { size: 10 }, callback: (v: number) => v + '' }, grid: { color: 'rgba(200,169,125,0.04)' }, border: { display: false },
         suggestedMin: 50, suggestedMax: 250 },
-      x: { ticks: { color: '#6b7691', font: { size: 10 }, maxTicksLimit: 8 }, grid: { display: false } },
+      x: { ticks: { color: '#7a756b', font: { size: 10 }, maxTicksLimit: 8 }, grid: { display: false } },
     },
   }
 

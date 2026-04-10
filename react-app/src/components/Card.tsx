@@ -5,19 +5,18 @@ interface CardProps {
   children: ReactNode
   title?: string
   className?: string
-  glass?: boolean
 }
 
-export default function Card({ children, title, className = '', glass }: CardProps) {
+export default function Card({ children, title, className = '' }: CardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className={`bg-surface border border-border rounded-[18px] p-[18px] mb-3 ${glass ? 'backdrop-blur-xl bg-surface/80' : ''} ${className}`}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className={`bg-surface border border-border rounded-2xl p-5 mb-3 ${className}`}
     >
       {title && (
-        <div className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-3.5">
+        <div className="text-[11px] font-medium text-muted uppercase tracking-[0.08em] mb-4">
           {title}
         </div>
       )}
@@ -26,12 +25,13 @@ export default function Card({ children, title, className = '', glass }: CardPro
   )
 }
 
-export function Badge({ children, color = 'blue' }: { children: ReactNode; color?: 'green' | 'amber' | 'red' | 'blue' }) {
+export function Badge({ children, color = 'blue' }: { children: ReactNode; color?: 'green' | 'amber' | 'red' | 'blue' | 'gold' }) {
   const colors = {
     green: 'bg-green-dim text-green',
     amber: 'bg-amber-dim text-amber',
     red: 'bg-red-dim text-red',
     blue: 'bg-blue-dim text-blue',
+    gold: 'bg-gold-dim text-gold',
   }
   return (
     <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${colors[color]}`}>
