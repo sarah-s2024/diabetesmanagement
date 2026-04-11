@@ -48,17 +48,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter','Sego
   background:linear-gradient(135deg,#d4b478 0%,#f0d090 50%,#a78bfa 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .lock-box p{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.6}
-.lock-box input{width:100%;padding:15px 18px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  font-size:22px;letter-spacing:10px;text-align:center;background:var(--surface2);
-  color:var(--text);margin-bottom:16px;outline:none;transition:.3s}
+.lock-box input{width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;letter-spacing:0;text-align:left;background:var(--surface2);
+  color:var(--text);margin-bottom:12px;outline:none;transition:.3s;box-sizing:border-box}
 .lock-box input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-glow);background:var(--surface3)}
-.lock-box button{width:100%;padding:15px;
+.lock-box button{width:100%;padding:14px;
   background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;
   border-radius:var(--radius-sm);font-size:15px;cursor:pointer;font-weight:700;letter-spacing:.3px;
-  box-shadow:0 4px 16px rgba(139,92,246,.3);transition:.2s}
+  box-shadow:0 4px 16px rgba(139,92,246,.3);transition:.2s;margin-top:4px}
 .lock-box button:hover{box-shadow:0 6px 24px rgba(139,92,246,.4);transform:translateY(-1px)}
 .lock-box button:active{transform:scale(.98);box-shadow:0 2px 8px rgba(139,92,246,.25)}
 .lock-err{color:var(--red);font-size:12px;margin-top:14px;min-height:18px;font-weight:500}
+.auth-tabs{display:flex;gap:6px;margin-bottom:24px;background:var(--surface2);border-radius:var(--radius-xs);padding:4px}
+.auth-tab{flex:1;padding:9px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;
+  background:transparent;color:var(--muted);transition:.2s}
+.auth-tab.active{background:var(--surface3);color:var(--text);box-shadow:var(--shadow-sm)}
 
 /* ─── Config modal ─── */
 #configModal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.2);
