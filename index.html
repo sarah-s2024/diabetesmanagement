@@ -1064,27 +1064,87 @@ const MED_DRUGS = {
 let sb = null, cgmData = [], dailyRecords = [], parsedCSV = [], gmiGlobal = null;
 let dashChart = null, cgmLineChart = null, agpChart = null, histChart = null, mealChart = null, exerciseChart = null;
 
-// ─── Auth ───
-function checkPw() {
-  const stored = localStorage.getItem(APP_PW_KEY);
-  if (!stored) { openConfig(); return; }
-  const val = document.getElementById('pwInput').value;
-  if (val === stored) { unlock(); }
-  else { document.getElementById('lockErr').textContent = '密码错误，请重试'; }
+// ─── SHA-256 (Web Crypto API) ───
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
-function unlock() {
-  sessionStorage.setItem('dm_unlocked', '1');
+
+// ─── Auth ───
+let currentAuthTab = 'login';
+
+function switchAuthTab(tab) {
+  currentAuthTab = tab;
+  document.getElementById('tabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('tabRegister').classList.toggle('active', tab==='register');
+  document.getElementById('authFormLogin').style.display = tab==='login' ? '' : 'none';
+  document.getElementById('authFormRegister').style.display = tab==='register' ? '' : 'none';
+  const errEl = document.getElementById('lockErr');
+  errEl.textContent = '';
+  errEl.style.color = 'var(--red)';
+}
+
+async function submitAuth() {
+  if (!sb) { initSupabase(); }
+  if (!sb) { openConfig(); return; }
+  const errEl = document.getElementById('lockErr');
+  errEl.textContent = ''; errEl.style.color = 'var(--red)';
+
+  if (currentAuthTab === 'login') {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!username || !password) { errEl.textContent = '请填写用户名和密码'; return; }
+    errEl.textContent = '登录中…';
+    const hash = await sha256(password);
+    const { data, error } = await sb.from('users')
+      .select('id,username,display_name')
+      .eq('username', username).eq('password_hash', hash).single();
+    if (error || !data) { errEl.textContent = '用户名或密码错误'; return; }
+    unlock(data);
+  } else {
+    const username = document.getElementById('regUsername').value.trim();
+    const displayName = document.getElementById('regDisplayName').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const password2 = document.getElementById('regPassword2').value;
+    if (!username) { errEl.textContent = '请填写用户名'; return; }
+    if (password.length < 8) { errEl.textContent = '密码至少 8 位'; return; }
+    if (password !== password2) { errEl.textContent = '两次密码不一致'; return; }
+    errEl.textContent = '注册中…';
+    const hash = await sha256(password);
+    const { error } = await sb.from('users')
+      .insert({ username, password_hash: hash, display_name: displayName || username });
+    if (error) {
+      errEl.textContent = (error.code === '23505') ? '用户名已存在' : ('注册失败: ' + error.message);
+      return;
+    }
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = '注册成功，请登录';
+    document.getElementById('loginUsername').value = username;
+    switchAuthTab('login');
+    setTimeout(() => { errEl.style.color = 'var(--red)'; errEl.textContent = ''; }, 3000);
+  }
+}
+
+function unlock(user) {
+  const session = user || JSON.parse(sessionStorage.getItem('dm_user_session') || 'null');
+  if (!session) return;
+  sessionStorage.setItem('dm_user_session', JSON.stringify(session));
   document.getElementById('lockScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  const nameEl = document.getElementById('appUsername');
+  if (nameEl) nameEl.textContent = session.display_name || session.username || '';
   initSupabase(); setTodayDate(); renderGreeting();
   renderMedList(); renderMedDashTab();
   setTimeout(loadAllData, 300);
 }
+
 function lock() {
-  sessionStorage.removeItem('dm_unlocked');
+  sessionStorage.removeItem('dm_user_session');
   document.getElementById('lockScreen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-  document.getElementById('pwInput').value = '';
+  const u = document.getElementById('loginUsername');
+  const p = document.getElementById('loginPassword');
+  if (u) u.value = ''; if (p) p.value = '';
 }
 
 // ─── Config ───
