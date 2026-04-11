@@ -1160,20 +1160,19 @@ function closeConfig() { document.getElementById('configModal').classList.remove
 function saveConfig() {
   const url = document.getElementById('cfgUrl').value.trim();
   const key = document.getElementById('cfgKey').value.trim();
-  const pw = document.getElementById('cfgPw').value.trim();
   const openaiKey = document.getElementById('cfgOpenaiKey').value.trim();
   const openrouterKey = document.getElementById('cfgOpenrouterKey').value.trim();
   const height = document.getElementById('cfgHeight').value.trim();
   if (!url || !key) { document.getElementById('cfgErr').textContent = 'URL 和 Key 必填'; return; }
-  if (pw) localStorage.setItem(APP_PW_KEY, pw);
   localStorage.setItem(SUPABASE_URL_KEY, url);
   localStorage.setItem(SUPABASE_KEY_KEY, key);
   if (openaiKey) localStorage.setItem(CLAUDE_KEY_KEY, openaiKey);
   if (openrouterKey) localStorage.setItem(OPENROUTER_KEY_KEY, openrouterKey);
   if (height) localStorage.setItem(HEIGHT_KEY, height);
-  closeConfig(); initSupabase(); loadAllData();
-  if (!localStorage.getItem(APP_PW_KEY)) { alert('请设置访问密码后刷新页面'); }
-  else { unlock(); }
+  closeConfig(); initSupabase();
+  // If already logged in, reload data; otherwise reload page to show login screen
+  if (sessionStorage.getItem('dm_user_session')) { loadAllData(); }
+  else { window.location.reload(); }
 }
 function initSupabase() {
   const url = localStorage.getItem(SUPABASE_URL_KEY);
