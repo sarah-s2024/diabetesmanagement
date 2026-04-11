@@ -440,9 +440,28 @@ main{padding:0 20px 20px;max-width:640px;margin:0 auto}
   <div class="lock-box">
     <span class="lock-icon">💉</span>
     <h2>血糖管理</h2>
-    <p>个人健康数据，请输入访问密码</p>
-    <input type="password" id="pwInput" placeholder="••••••" onkeydown="if(event.key==='Enter')checkPw()">
-    <button onclick="checkPw()">解锁进入</button>
+    <p>个人健康数据，请登录访问</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">登录</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">注册</button>
+    </div>
+    <div id="authFormLogin">
+      <input type="text" id="loginUsername" placeholder="用户名" autocomplete="username"
+        onkeydown="if(event.key==='Enter')submitAuth()">
+      <input type="password" id="loginPassword" placeholder="密码" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')submitAuth()">
+      <button onclick="submitAuth()">登录</button>
+    </div>
+    <div id="authFormRegister" style="display:none">
+      <input type="text" id="regUsername" placeholder="用户名" autocomplete="username"
+        onkeydown="if(event.key==='Enter')submitAuth()">
+      <input type="text" id="regDisplayName" placeholder="显示名称（可选）">
+      <input type="password" id="regPassword" placeholder="密码（8位以上）" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter')submitAuth()">
+      <input type="password" id="regPassword2" placeholder="确认密码" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter')submitAuth()">
+      <button onclick="submitAuth()">注册账号</button>
+    </div>
     <div class="lock-err" id="lockErr"></div>
   </div>
 </div>
