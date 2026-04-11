@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -95,40 +95,36 @@ function groupSessionsByDate(sessions: ChatSession[]) {
   return groups
 }
 
-/* ── Markdown renderer ── */
-function Md({ children }: { children: string }) {
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        p: (props) => <p className="mb-3 last:mb-0 leading-[1.75]" {...props} />,
-        h1: (props) => <h1 className="text-lg font-semibold text-text mb-2 mt-5 first:mt-0" {...props} />,
-        h2: (props) => <h2 className="text-base font-semibold text-text mb-2 mt-4 first:mt-0" {...props} />,
-        h3: (props) => <h3 className="text-[14px] font-semibold text-text mb-1.5 mt-3 first:mt-0" {...props} />,
-        ul: (props) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
-        ol: (props) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
-        li: (props) => <li className="text-text/85 leading-[1.7]" {...props} />,
-        strong: (props) => <strong className="font-semibold text-text" {...props} />,
-        em: (props) => <em className="text-text/70" {...props} />,
-        a: ({ href, ...props }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-gold underline underline-offset-2 decoration-gold/30 hover:decoration-gold/60 transition-colors" {...props} />,
-        blockquote: (props) => <blockquote className="border-l-2 border-gold/25 pl-4 my-3 text-text/65 italic" {...props} />,
-        hr: () => <hr className="border-border my-5" />,
-        pre: (props) => <pre className="bg-surface2 border border-border rounded-xl p-4 my-3 overflow-x-auto text-[13px] leading-relaxed" {...props} />,
-        code: ({ className, children: c, ...props }) => {
-          const isBlock = className?.startsWith('language-') || (typeof (props.node as any)?.position?.start?.line === 'number' && (props.node as any)?.parent?.type === 'element')
-          if (isBlock) return <code className="font-mono text-text/80" {...props}>{c}</code>
-          return <code className="bg-surface3 text-gold/80 px-1.5 py-0.5 rounded text-[13px] font-mono" {...props}>{c}</code>
-        },
-        table: (props) => <div className="overflow-x-auto my-3 rounded-lg border border-border"><table className="w-full text-[13px] border-collapse" {...props} /></div>,
-        thead: (props) => <thead className="bg-surface2" {...props} />,
-        th: (props) => <th className="border-b border-border px-3 py-2 text-left text-text/80 font-medium" {...props} />,
-        td: (props) => <td className="border-b border-border px-3 py-2 text-text/70" {...props} />,
-      }}
-    >
-      {children}
-    </ReactMarkdown>
-  )
+/* ── Markdown components (stable ref — defined at module level to avoid re-creation) ── */
+const MD_PLUGINS = [remarkGfm]
+const MD_COMPONENTS: Record<string, any> = {
+  p: (props: any) => <p className="mb-3 last:mb-0 leading-[1.75]" {...props} />,
+  h1: (props: any) => <h1 className="text-lg font-semibold text-text mb-2 mt-5 first:mt-0" {...props} />,
+  h2: (props: any) => <h2 className="text-base font-semibold text-text mb-2 mt-4 first:mt-0" {...props} />,
+  h3: (props: any) => <h3 className="text-[14px] font-semibold text-text mb-1.5 mt-3 first:mt-0" {...props} />,
+  ul: (props: any) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
+  ol: (props: any) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
+  li: (props: any) => <li className="text-text/85 leading-[1.7]" {...props} />,
+  strong: (props: any) => <strong className="font-semibold text-text" {...props} />,
+  em: (props: any) => <em className="text-text/70" {...props} />,
+  a: ({ href, ...props }: any) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-gold underline underline-offset-2 decoration-gold/30 hover:decoration-gold/60 transition-colors" {...props} />,
+  blockquote: (props: any) => <blockquote className="border-l-2 border-gold/25 pl-4 my-3 text-text/65 italic" {...props} />,
+  hr: () => <hr className="border-border my-5" />,
+  pre: (props: any) => <pre className="bg-surface2 border border-border rounded-xl p-4 my-3 overflow-x-auto text-[13px] leading-relaxed" {...props} />,
+  code: ({ className, children: c, ...props }: any) => {
+    if (className?.startsWith('language-')) return <code className="font-mono text-text/80" {...props}>{c}</code>
+    return <code className="bg-surface3 text-gold/80 px-1.5 py-0.5 rounded text-[13px] font-mono" {...props}>{c}</code>
+  },
+  table: (props: any) => <div className="overflow-x-auto my-3 rounded-lg border border-border"><table className="w-full text-[13px] border-collapse" {...props} /></div>,
+  thead: (props: any) => <thead className="bg-surface2" {...props} />,
+  th: (props: any) => <th className="border-b border-border px-3 py-2 text-left text-text/80 font-medium" {...props} />,
+  td: (props: any) => <td className="border-b border-border px-3 py-2 text-text/70" {...props} />,
 }
+
+/* ── Memoized markdown renderer — only re-renders when text actually changes ── */
+const Md = memo(function Md({ children }: { children: string }) {
+  return <ReactMarkdown remarkPlugins={MD_PLUGINS} components={MD_COMPONENTS}>{children}</ReactMarkdown>
+})
 
 /* ══════════════════════════════════════════════════
    AgentChat — Claude.ai inspired design
@@ -146,6 +142,9 @@ export default function AgentChat() {
   const msgEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const historyRef = useRef<any[]>([])
+  const streamBufRef = useRef('')
+  const throttleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const sendingRef = useRef(false)
 
   const showWelcome = messages.length === 0 && !busy
 
@@ -179,8 +178,9 @@ export default function AgentChat() {
     })
   }, [activeSessionId])
 
-  /* Auto-scroll */
-  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, typing, streamingText])
+  /* Auto-scroll: smooth for new messages, instant during streaming to avoid jitter */
+  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages, typing])
+  useEffect(() => { if (streamingText) msgEndRef.current?.scrollIntoView({ behavior: 'auto' }) }, [streamingText])
 
   const startNewChat = () => {
     setActiveSessionId(null)
@@ -200,7 +200,8 @@ export default function AgentChat() {
   /* ── Send message (streaming) ── */
   const send = async (overrideText?: string) => {
     const text = (overrideText || input).trim()
-    if (busy || !text || !user) return
+    if (busy || sendingRef.current || !text || !user) return
+    sendingRef.current = true
     if (!getAiProvider()) { setMessages(m => [...m, { role: 'assistant', content: '请先在设置中配置 API Key' }]); return }
     if (!overrideText) setInput('')
 
@@ -239,7 +240,7 @@ export default function AgentChat() {
           throw new Error(errBody || `HTTP ${r?.res?.status}`)
         }
 
-        /* Stream the response */
+        /* Stream the response — throttled to avoid flicker */
         setTyping('')
         let streamText = ''
         const toolCalls: StreamToolCall[] = []
@@ -247,11 +248,19 @@ export default function AgentChat() {
         for await (const ev of parseAiStream(r.res, r.format)) {
           if (ev.type === 'text') {
             streamText += ev.text
-            setStreamingText(streamText)
+            streamBufRef.current = streamText
+            if (!throttleRef.current) {
+              throttleRef.current = setTimeout(() => {
+                setStreamingText(streamBufRef.current)
+                throttleRef.current = null
+              }, 80)
+            }
           } else if (ev.type === 'tool_call') {
             toolCalls.push(ev.toolCall)
           }
         }
+        // Flush final text & clean up
+        if (throttleRef.current) { clearTimeout(throttleRef.current); throttleRef.current = null }
         setStreamingText('')
 
         /* Handle tool calls */
@@ -311,12 +320,13 @@ export default function AgentChat() {
         break
       }
     } catch (e: any) {
+      if (throttleRef.current) { clearTimeout(throttleRef.current); throttleRef.current = null }
       setStreamingText('')
       const errMsg = '请求失败：' + e.message
       setMessages(m => [...m, { role: 'assistant', content: errMsg }])
       await saveMessage(sid!, 'assistant', errMsg)
     }
-    setBusy(false); setTyping('')
+    setBusy(false); setTyping(''); sendingRef.current = false
   }
 
   const sessionGroups = groupSessionsByDate(sessions)
