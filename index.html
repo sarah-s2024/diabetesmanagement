@@ -2581,20 +2581,21 @@ function showStatus(msg,ms=3000){
 
 // ─── Init ───
 (function init(){
-  const hasPw=localStorage.getItem(APP_PW_KEY);
   const hasUrl=localStorage.getItem(SUPABASE_URL_KEY);
   const hasKey=localStorage.getItem(SUPABASE_KEY_KEY);
-  if(!hasPw||!hasUrl||!hasKey){
+  if(!hasUrl||!hasKey){
     document.getElementById('lockScreen').innerHTML=`
       <div class="lock-box">
         <span class="lock-icon">⚙️</span>
         <h2>首次设置</h2>
-        <p>请先配置 Supabase 连接和访问密码</p>
+        <p>请先配置 Supabase 连接信息</p>
         <button onclick="document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';openConfig()">开始配置</button>
       </div>`;
     return;
   }
-  if(sessionStorage.getItem('dm_unlocked')==='1') unlock();
+  initSupabase();
+  const session=JSON.parse(sessionStorage.getItem('dm_user_session')||'null');
+  if(session) unlock(session);
 })();
 </script>
 </body>
