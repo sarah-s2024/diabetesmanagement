@@ -70,7 +70,7 @@ function buildDefaultPlan(kcal: number, kg: number): NutritionPlan {
 
 /* ── Insights ── */
 interface Insight { icon: string; title: string; desc: string }
-function buildInsights(tirPct: number | null, avg: number | null, sd: number | null, fasting: number | null, hba1c: number | null): Insight[] {
+function buildInsights(tirPct: number | null, _avg: number | null, sd: number | null, fasting: number | null, hba1c: number | null): Insight[] {
   const items: Insight[] = []
   if (tirPct == null) { items.push({ icon: '📡', title: '等待数据', desc: '请上传 CGM CSV 文件以获取分析' }); return items }
   if (tirPct >= 90) items.push({ icon: '🎯', title: '血糖控制优秀', desc: `TIR ${tirPct}%，持续保持！` })
