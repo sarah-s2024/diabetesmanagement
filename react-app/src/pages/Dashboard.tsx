@@ -290,20 +290,48 @@ export default function Dashboard() {
 
       {/* Metric cards — horizontal scroll */}
       {stats && (
-        <div className="flex gap-2.5 overflow-x-auto pb-3 mb-2 scrollbar-none">
-          {[
-            { label: 'CGM 均值', val: stats.avg, unit: 'mg/dL', status: stats.avg <= 140 ? 'text-green' : stats.avg <= 180 ? 'text-gold' : 'text-red' },
-            gmi ? { label: 'GMI', val: gmi, unit: '%', status: gmi < 6 ? 'text-green' : gmi < 7 ? 'text-gold' : 'text-red' } : null,
-            { label: '变异度', val: stats.sd, unit: 'SD', status: stats.sd <= 30 ? 'text-green' : stats.sd <= 50 ? 'text-gold' : 'text-red' },
-            bodyMetrics.hba1c ? { label: 'HbA1c', val: bodyMetrics.hba1c, unit: '%', status: bodyMetrics.hba1c < 6 ? 'text-green' : bodyMetrics.hba1c < 7 ? 'text-gold' : 'text-red' } : null,
-          ].filter(Boolean).map((c, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
-              className="flex-shrink-0 w-[110px] bg-surface border border-border rounded-2xl p-4">
-              <div className={`text-[26px] font-light tracking-tight ${c!.status}`}>{c!.val}</div>
-              <div className="text-[10px] text-muted mt-1 tracking-wider">{c!.label}</div>
-            </motion.div>
-          ))}
-        </div>
+        <>
+          <div className="text-[10px] text-muted uppercase tracking-[0.08em] font-semibold mb-2 px-0.5">各项指标</div>
+          <div className="flex gap-2.5 overflow-x-auto pb-3 mb-2 scrollbar-none">
+            {[
+              {
+                icon: '📊', label: 'CGM 均值', val: stats.avg, unit: 'mg/dL',
+                statusCls: stats.avg <= 140 ? 'text-green' : stats.avg <= 180 ? 'text-gold' : 'text-red',
+                dotCls: stats.avg <= 140 ? 'bg-green' : stats.avg <= 180 ? 'bg-gold' : 'bg-red',
+                statusText: stats.avg <= 140 ? '正常' : stats.avg <= 180 ? '偏高' : '过高',
+              },
+              gmi ? {
+                icon: '🧮', label: 'GMI', val: gmi, unit: '%',
+                statusCls: gmi < 6 ? 'text-green' : gmi < 7 ? 'text-gold' : 'text-red',
+                dotCls: gmi < 6 ? 'bg-green' : gmi < 7 ? 'bg-gold' : 'bg-red',
+                statusText: gmi < 6 ? '理想' : gmi < 7 ? '良好' : '偏高',
+              } : null,
+              {
+                icon: '〰️', label: '血糖变异', val: stats.sd, unit: 'SD',
+                statusCls: stats.sd <= 30 ? 'text-green' : stats.sd <= 50 ? 'text-gold' : 'text-red',
+                dotCls: stats.sd <= 30 ? 'bg-green' : stats.sd <= 50 ? 'bg-gold' : 'bg-red',
+                statusText: stats.sd <= 30 ? '波动低' : stats.sd <= 50 ? '波动中' : '波动高',
+              },
+              bodyMetrics.hba1c ? {
+                icon: '🩸', label: 'HbA1c', val: bodyMetrics.hba1c, unit: '%',
+                statusCls: bodyMetrics.hba1c < 6 ? 'text-green' : bodyMetrics.hba1c < 7 ? 'text-gold' : 'text-red',
+                dotCls: bodyMetrics.hba1c < 6 ? 'bg-green' : bodyMetrics.hba1c < 7 ? 'bg-gold' : 'bg-red',
+                statusText: bodyMetrics.hba1c < 6 ? '理想' : bodyMetrics.hba1c < 7 ? '良好' : '偏高',
+              } : null,
+            ].filter(Boolean).map((c, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
+                className="flex-shrink-0 w-[120px] bg-surface border border-border rounded-2xl p-4">
+                <div className="text-xl mb-2">{c!.icon}</div>
+                <div className={`text-[26px] font-light tracking-tight leading-none ${c!.statusCls}`}>{c!.val}</div>
+                <div className="text-[10px] text-muted mt-1.5 tracking-wider">{c!.label}</div>
+                <div className="flex items-center gap-1 mt-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c!.dotCls}`} />
+                  <span className={`text-[10px] font-medium ${c!.statusCls}`}>{c!.statusText}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Current medications */}
