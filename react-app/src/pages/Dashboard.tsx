@@ -426,20 +426,34 @@ export default function Dashboard() {
       {/* Body metrics with BMI gauge */}
       {(bodyMetrics.bmi != null || bodyMetrics.weightLbs != null) && (
         <Card title="身体指标">
-          <div className="flex items-start gap-3 flex-wrap">
-            {bodyMetrics.bmi != null && <BmiGauge bmi={bodyMetrics.bmi} />}
-            <div className="flex-1 grid grid-cols-2 gap-2 min-w-[160px]">
+          {/* Target range pills */}
+          <div className="flex gap-2 mb-4">
+            <span className="text-[11px] font-medium text-green bg-green/10 border border-green/20 px-3 py-1 rounded-full">空腹 80–130</span>
+            <span className="text-[11px] font-medium text-green bg-green/10 border border-green/20 px-3 py-1 rounded-full">餐后 &lt;180</span>
+          </div>
+          <div className="flex items-start gap-4">
+            {/* BMI gauge + label */}
+            {bodyMetrics.bmi != null && (
+              <div className="flex flex-col items-center flex-shrink-0">
+                <BmiGauge bmi={bodyMetrics.bmi} />
+                <div className="text-[10px] text-muted mt-1 text-center">
+                  BMI 分类：<span style={{ color: bodyMetrics.bmi < 18.5 ? '#6b9fd4' : bodyMetrics.bmi < 25 ? '#5cb88a' : bodyMetrics.bmi < 30 ? '#d4a84b' : '#e06464' }}>
+                    {bodyMetrics.bmi < 18.5 ? '偏轻' : bodyMetrics.bmi < 25 ? '正常' : bodyMetrics.bmi < 30 ? '超重' : '肥胖'}
+                  </span>
+                </div>
+              </div>
+            )}
+            {/* Metrics list */}
+            <div className="flex-1 space-y-2.5 min-w-0">
               {[
-                { label: '目标空腹', val: '80–130 mg/dL', col: '' },
-                { label: '目标餐后', val: '<180 mg/dL', col: '' },
+                { label: 'BMI', val: bodyMetrics.bmi != null ? bodyMetrics.bmi.toFixed(1) : '--', col: bodyMetrics.bmi != null ? (bodyMetrics.bmi < 18.5 ? 'text-blue' : bodyMetrics.bmi < 25 ? 'text-green' : bodyMetrics.bmi < 30 ? 'text-gold' : 'text-red') : '' },
                 { label: '体重', val: bodyMetrics.weightLbs ? bodyMetrics.weightLbs + ' lbs' : '--', col: '' },
                 { label: 'HbA1c', val: bodyMetrics.hba1c ? bodyMetrics.hba1c + '%' : '--', col: bodyMetrics.hba1c ? (bodyMetrics.hba1c < 6 ? 'text-green' : bodyMetrics.hba1c < 7 ? 'text-gold' : 'text-red') : '' },
                 { label: '热量预算', val: bodyMetrics.totalKcal + ' kcal', col: '' },
-                { label: '空腹血糖', val: bodyMetrics.fasting ? bodyMetrics.fasting + '' : '--', col: bodyMetrics.fasting ? (bodyMetrics.fasting <= 100 ? 'text-green' : bodyMetrics.fasting <= 130 ? 'text-gold' : 'text-red') : '' },
               ].map(m => (
-                <div key={m.label} className="bg-surface2 border border-border rounded-xl p-3">
-                  <div className="text-[10px] text-muted uppercase tracking-[0.08em] font-medium mb-1">{m.label}</div>
-                  <div className={`text-xs font-medium tracking-tight ${m.col || 'text-text'}`}>{m.val}</div>
+                <div key={m.label} className="flex items-center justify-between py-1.5 border-b border-border2 last:border-0">
+                  <span className="text-[11px] text-muted">{m.label}</span>
+                  <span className={`text-sm font-semibold ${m.col || 'text-text'}`}>{m.val}</span>
                 </div>
               ))}
             </div>
