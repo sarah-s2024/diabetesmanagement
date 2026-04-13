@@ -1,12 +1,13 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Chart as ChartJS, registerables } from 'chart.js'
-import { Bar } from 'react-chartjs-2'
+import { Bar, Line } from 'react-chartjs-2'
 import Card from '../components/Card'
 import { useApp } from '../contexts/AppContext'
 import { getConfig } from '../lib/config'
 import { getActiveMeds } from '../lib/storage'
 import { WEEK_PLAN } from '../lib/constants'
+import { callAi, getAiProvider, parseAiStream } from '../lib/ai-client'
 
 ChartJS.register(...registerables)
 
@@ -15,52 +16,225 @@ function getGreeting() {
   return h < 6 ? '夜深了，注意休息' : h < 11 ? '早上好' : h < 14 ? '中午好' : h < 18 ? '下午好' : '晚上好'
 }
 
+/* ── AI Nutrition Plan ── */
+interface NutritionPlan {
+  kcal: number; proteinG: number; fatG: number; carbG: number
+  mealNote?: string; exerciseFocus?: string; aiGenerated?: boolean; date?: string
+}
+
+async function loadAiNutritionPlan(snap: {
+  weightKg: number; heightCm: number; bmi: number
+  avg: number; tir: number; sd: number; hba1c?: number
+  meds: string; kcalBase: number
+}): Promise<NutritionPlan | null> {
+  if (!getAiProvider()) return null
+  const today = new Date().toISOString().slice(0, 10)
+  const cached = JSON.parse(localStorage.getItem('dm_ai_nutrition') || 'null')
+  if (cached?.date === today) return cached
+
+  const prompt = `你是糖尿病营养顾问。根据以下健康数据输出今日营养方案，仅返回一行JSON，不含任何说明文字：
+体重${snap.weightKg.toFixed(1)}kg 身高${snap.heightCm}cm BMI${snap.bmi.toFixed(1)}
+近7日CGM均值${snap.avg}mg/dL TIR${snap.tir}% 血糖标准差${snap.sd}
+${snap.hba1c ? `HbA1c: ${snap.hba1c}%` : ''}
+当前用药：${snap.meds}
+基础热量预算：${snap.kcalBase}kcal
+
+返回格式（仅JSON，无其他文字）：
+{"kcal":数字,"proteinG":数字,"fatG":数字,"carbG":数字,"mealNote":"≤25字建议","exerciseFocus":"≤35字运动重点"}`
+
+  try {
+    const r = await callAi({
+      model: 'claude-haiku-4-5-20251001', max_tokens: 200, stream: true,
+      messages: [{ role: 'user', content: prompt }]
+    })
+    if (!r) return null
+    let text = ''
+    for await (const ev of parseAiStream(r.res, r.format)) {
+      if (ev.type === 'text') text += ev.text
+      if (ev.type === 'done') break
+    }
+    const m = text.match(/\{[\s\S]*\}/)
+    if (!m) return null
+    const plan: NutritionPlan = { ...JSON.parse(m[0]), aiGenerated: true, date: today }
+    localStorage.setItem('dm_ai_nutrition', JSON.stringify(plan))
+    return plan
+  } catch { return null }
+}
+
+function buildDefaultPlan(kcal: number, kg: number): NutritionPlan {
+  const pG = Math.round(Math.min(kg * 1.8, kcal * 0.35 / 4))
+  const fG = Math.round(kcal * 0.30 / 9)
+  const cG = Math.max(80, Math.round((kcal - pG * 4 - fG * 9) / 4))
+  return { kcal, proteinG: pG, fatG: fG, carbG: cG }
+}
+
+/* ── Insights ── */
+interface Insight { icon: string; title: string; desc: string }
+function buildInsights(tirPct: number | null, avg: number | null, sd: number | null, fasting: number | null, hba1c: number | null): Insight[] {
+  const items: Insight[] = []
+  if (tirPct == null) { items.push({ icon: '📡', title: '等待数据', desc: '请上传 CGM CSV 文件以获取分析' }); return items }
+  if (tirPct >= 90) items.push({ icon: '🎯', title: '血糖控制优秀', desc: `TIR ${tirPct}%，持续保持！` })
+  else if (tirPct >= 70) items.push({ icon: '💪', title: '控糖良好', desc: `TIR ${tirPct}%，继续努力` })
+  else items.push({ icon: '⚠️', title: '需要关注', desc: `TIR ${tirPct}%，建议调整方案并咨询医生` })
+  if (sd != null && sd > 40) items.push({ icon: '〰️', title: '血糖波动较大', desc: `标准差 ${sd} mg/dL，注意饮食规律` })
+  if (hba1c) {
+    if (hba1c < 6) items.push({ icon: '🌟', title: 'HbA1c 达优', desc: `${hba1c}% 非常理想` })
+    else if (hba1c < 7) items.push({ icon: '✅', title: 'HbA1c 良好', desc: `${hba1c}%，保持当前状态` })
+    else items.push({ icon: '🩸', title: 'HbA1c 偏高', desc: `${hba1c}%，注意饮食控制` })
+  }
+  if (fasting) {
+    if (fasting <= 100) items.push({ icon: '🌙', title: '空腹血糖正常', desc: `${fasting} mg/dL 达标` })
+    else if (fasting <= 130) items.push({ icon: '🌤️', title: '空腹血糖偏高', desc: `${fasting} mg/dL，可关注夜间饮食` })
+    else items.push({ icon: '🌡️', title: '空腹血糖过高', desc: `${fasting} mg/dL，建议就诊` })
+  }
+  const h = new Date().getHours()
+  if (h >= 14 && h <= 16) items.push({ icon: '🏃', title: '下午是运动好时机', desc: '饭后 1–2 小时有氧运动有助于降低血糖' })
+  return items
+}
+
+/* ── BMI Gauge ── */
+function BmiGauge({ bmi }: { bmi: number }) {
+  const label = bmi < 18.5 ? '偏轻' : bmi < 25 ? '正常' : bmi < 30 ? '超重' : '肥胖'
+  const color = bmi < 18.5 ? '#6b9fd4' : bmi < 25 ? '#5cb88a' : bmi < 30 ? '#d4a84b' : '#e06464'
+  const r = 58, cx = 78, cy = 68
+  const toXY = (deg: number) => {
+    const rad = (deg - 90) * Math.PI / 180
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+  }
+  const arc = (startDeg: number, endDeg: number, clr: string) => {
+    const s = toXY(startDeg), e = toXY(endDeg)
+    return <path d={`M ${s.x} ${s.y} A ${r} ${r} 0 0 1 ${e.x} ${e.y}`} fill="none" stroke={clr} strokeWidth="9" strokeLinecap="butt" />
+  }
+  const needleDeg = Math.min(Math.max((bmi - 15) / (40 - 15) * 180, 0), 180)
+  const needleRad = (needleDeg - 90) * Math.PI / 180
+  const nx = cx + (r - 6) * Math.cos(needleRad), ny = cy + (r - 6) * Math.sin(needleRad)
+  return (
+    <div className="flex flex-col items-center flex-shrink-0">
+      <svg width="156" height="78" viewBox="0 0 156 78">
+        {arc(0, 45, '#6b9fd4')}
+        {arc(45, 90, '#5cb88a')}
+        {arc(90, 135, '#d4a84b')}
+        {arc(135, 180, '#e06464')}
+        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx={cx} cy={cy} r="4" fill={color} />
+        <text x={cx} y={cy - 12} textAnchor="middle" fill={color} fontSize="14" fontWeight="700">{bmi.toFixed(1)}</text>
+      </svg>
+      <div className="text-[10px] font-semibold uppercase tracking-wider -mt-1" style={{ color }}>{label}</div>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { cgmData, dailyRecords, gmi, setActivePage, setChatOpen, user } = useApp()
   const cfg = getConfig()
+  const [nutritionPlan, setNutritionPlan] = useState<NutritionPlan | null>(null)
+  const planLoaded = useRef(false)
 
   const stats = useMemo(() => {
     if (!cgmData.length) return null
-    const vals = cgmData.map(d => d.glucose_mg_dl)
-    const avg = Math.round(vals.reduce((a,b) => a+b, 0) / vals.length)
+    const lastTs = new Date(cgmData[cgmData.length - 1].device_timestamp).getTime()
+    const week = cgmData.filter(d => new Date(d.device_timestamp).getTime() >= lastTs - 7 * 86400000)
+    const vals = week.length ? week.map(d => d.glucose_mg_dl) : cgmData.map(d => d.glucose_mg_dl)
+    const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
     const inRange = vals.filter(v => v >= 70 && v <= 180).length
     const low = vals.filter(v => v < 70).length
     const high = vals.filter(v => v > 180).length
     const tir = Math.round(inRange / vals.length * 100)
     const lowPct = Math.round(low / vals.length * 100)
     const highPct = Math.round(high / vals.length * 100)
-    const sd = Math.round(Math.sqrt(vals.reduce((s,v) => s + (v-avg)**2, 0) / vals.length))
+    const sd = Math.round(Math.sqrt(vals.reduce((s, v) => s + (v - avg) ** 2, 0) / vals.length))
     const last = cgmData[cgmData.length - 1]
     const prev = cgmData.length >= 2 ? cgmData[cgmData.length - 2].glucose_mg_dl : null
     return { avg, tir, lowPct, highPct, sd, last, prev }
   }, [cgmData])
 
+  // 24h mini chart data (relative to most recent reading)
+  const h24 = useMemo(() => {
+    if (!cgmData.length) return []
+    const lastTs = new Date(cgmData[cgmData.length - 1].device_timestamp).getTime()
+    return cgmData.filter(d => new Date(d.device_timestamp).getTime() >= lastTs - 86400000)
+  }, [cgmData])
+
+  // Consecutive days with TIR >= 70%
+  const streak = useMemo(() => {
+    if (!cgmData.length) return 0
+    const byDate: Record<string, number[]> = {}
+    cgmData.forEach(d => {
+      const date = d.device_timestamp.slice(0, 10)
+      if (!byDate[date]) byDate[date] = []
+      byDate[date].push(d.glucose_mg_dl)
+    })
+    let count = 0
+    for (const date of Object.keys(byDate).sort().reverse()) {
+      const vals = byDate[date]
+      const tir = vals.filter(v => v >= 70 && v <= 180).length / vals.length * 100
+      if (tir >= 70) count++; else break
+    }
+    return count
+  }, [cgmData])
+
   const bodyMetrics = useMemo(() => {
-    const latest = dailyRecords[0]
     const heightCm = cfg?.height_cm || 170
-    const weightLbs = latest?.weight_lbs
+    const weightRec = dailyRecords.find(r => r.weight_lbs)
+    const weightLbs = weightRec?.weight_lbs ?? null
     const weightKg = weightLbs ? weightLbs * 0.453592 : null
     const bmi = weightKg ? weightKg / (heightCm / 100) ** 2 : null
-    const hba1c = dailyRecords.find(r => r.hba1c)?.hba1c
-    const fasting = latest?.fasting_glucose
-    return { weightLbs, bmi, hba1c, fasting }
+    const hba1c = dailyRecords.find(r => r.hba1c)?.hba1c ?? null
+    const fasting = dailyRecords[0]?.fasting_glucose ?? null
+    const totalKcal = weightKg ? Math.max(1400, Math.round(weightKg * 25 / 100) * 100) : 1800
+    return { weightLbs, weightKg, bmi, hba1c, fasting, heightCm, totalKcal }
   }, [dailyRecords, cfg])
 
   const meds = useMemo(() => getActiveMeds(), [])
 
+  // AI nutrition plan: show default immediately, update when AI returns
+  useEffect(() => {
+    if (planLoaded.current) return
+    const { weightKg, heightCm, bmi, totalKcal } = bodyMetrics
+    if (!weightKg || !bmi || !stats) return
+    planLoaded.current = true
+    setNutritionPlan(buildDefaultPlan(totalKcal, weightKg))
+    loadAiNutritionPlan({
+      weightKg, heightCm, bmi,
+      avg: stats.avg, tir: stats.tir, sd: stats.sd,
+      hba1c: bodyMetrics.hba1c ?? undefined,
+      meds: meds.map(m => `${m.drug}${m.dose ? ' ' + m.dose : ''}`).join('；') || '无',
+      kcalBase: totalKcal,
+    }).then(plan => { if (plan) setNutritionPlan(plan) })
+  }, [bodyMetrics, stats, meds])
+
   const tirState = stats ? (
-    stats.tir >= 90 ? { text: '优秀', color: 'text-green', label: '血糖控制优秀' }
-    : stats.tir >= 70 ? { text: '良好', color: 'text-gold', label: '血糖控制良好' }
-    : { text: '需关注', color: 'text-red', label: '需要关注' }
+    stats.tir >= 90 ? { text: '优秀控糖 🎯', color: 'text-green' }
+    : stats.tir >= 70 ? { text: '继续保持 💪', color: 'text-gold' }
+    : { text: '请联系医生 ⚠️', color: 'text-red' }
   ) : null
 
   const ringDash = stats ? (stats.tir / 100) * (2 * Math.PI * 91) : 0
   const circ = 2 * Math.PI * 91
-
-  const lastVal = stats?.last?.glucose_mg_dl
+  const lastVal = stats?.last?.glucose_mg_dl ?? null
   const glucoseColor = !lastVal ? 'text-muted' : lastVal < 70 ? 'text-red' : lastVal > 180 ? 'text-amber' : 'text-green'
   const pointerPct = lastVal ? Math.max(0, Math.min(100, (lastVal - 55) / (250 - 55) * 100)) : 50
-  const trend = stats?.prev ? (lastVal! - stats.prev > 5 ? '↑' : lastVal! - stats.prev < -5 ? '↓' : '→') : ''
+  const trend = stats?.prev != null && lastVal != null
+    ? (lastVal - stats.prev > 5 ? '↑' : lastVal - stats.prev < -5 ? '↓' : '→') : ''
+
+  const insights = buildInsights(stats?.tir ?? null, stats?.avg ?? null, stats?.sd ?? null, bodyMetrics.fasting, bodyMetrics.hba1c)
+
+  const miniChartData = {
+    labels: h24.map(d => new Date(d.device_timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })),
+    datasets: [
+      { data: h24.map(d => Math.round(d.glucose_mg_dl)), borderColor: '#5cb88a', backgroundColor: 'rgba(92,184,138,0.07)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 1.5 },
+      { data: Array(h24.length).fill(70), borderColor: 'rgba(224,100,100,0.4)', borderDash: [4, 4] as number[], borderWidth: 1, pointRadius: 0, fill: false },
+      { data: Array(h24.length).fill(180), borderColor: 'rgba(212,168,75,0.4)', borderDash: [4, 4] as number[], borderWidth: 1, pointRadius: 0, fill: false },
+    ]
+  }
+  const miniChartOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 60, max: 220, ticks: { color: '#7a756b', font: { size: 9 } }, grid: { color: 'rgba(200,169,125,0.04)' }, border: { display: false } },
+      x: { ticks: { maxTicksLimit: 6, color: '#7a756b', font: { size: 9 } }, grid: { display: false } },
+    }
+  }
 
   return (
     <div className="pb-4">
@@ -70,7 +244,7 @@ export default function Dashboard() {
         <div className="text-2xl font-semibold tracking-tight mt-0.5">{user?.display_name || user?.username}</div>
       </div>
 
-      {/* TIR Ring — Oura style */}
+      {/* TIR Ring */}
       <div className="flex flex-col items-center py-6 relative">
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-gold/[0.03] blur-[80px] pointer-events-none" />
         <div className="relative w-[200px] h-[200px] z-[1]">
@@ -83,24 +257,36 @@ export default function Dashboard() {
               </linearGradient>
             </defs>
             <circle cx="105" cy="105" r="91" fill="none" stroke="rgba(200,169,125,0.08)" strokeWidth="10" />
-            <motion.circle
-              cx="105" cy="105" r="91" fill="none" stroke="url(#tirGrad)" strokeWidth="10" strokeLinecap="round"
+            <motion.circle cx="105" cy="105" r="91" fill="none" stroke="url(#tirGrad)" strokeWidth="10" strokeLinecap="round"
               initial={{ strokeDasharray: `0 ${circ}` }}
               animate={{ strokeDasharray: `${ringDash.toFixed(1)} ${circ.toFixed(1)}` }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-            />
+              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.2 }} />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <div className="text-[52px] font-light tracking-[-2px] leading-none text-text">
-              {stats ? stats.tir : '--'}
-            </div>
+            <div className="text-[52px] font-light tracking-[-2px] leading-none text-text">{stats ? stats.tir : '--'}</div>
             <div className="text-[11px] text-muted tracking-wider mt-1">TIR %</div>
+            {tirState && <div className={`text-xs font-medium mt-1.5 ${tirState.color}`}>{tirState.text}</div>}
           </div>
         </div>
-        {tirState && (
-          <div className={`mt-4 text-xs font-medium ${tirState.color}`}>{tirState.label}</div>
-        )}
       </div>
+
+      {/* Streak + state pills */}
+      {(tirState || streak > 1) && (
+        <div className="flex gap-2 justify-center mb-4 flex-wrap">
+          {tirState && (
+            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-full px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: stats!.tir >= 90 ? 'var(--color-green)' : stats!.tir >= 70 ? 'var(--color-gold)' : 'var(--color-red)' }} />
+              <span className="text-xs text-text">{tirState.text}</span>
+            </div>
+          )}
+          {streak > 1 && (
+            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-full px-3 py-1.5">
+              <span className="text-xs">🔥</span>
+              <span className="text-xs text-text">{streak} 天达标</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Metric cards — horizontal scroll */}
       {stats && (
@@ -111,13 +297,8 @@ export default function Dashboard() {
             { label: '变异度', val: stats.sd, unit: 'SD', status: stats.sd <= 30 ? 'text-green' : stats.sd <= 50 ? 'text-gold' : 'text-red' },
             bodyMetrics.hba1c ? { label: 'HbA1c', val: bodyMetrics.hba1c, unit: '%', status: bodyMetrics.hba1c < 6 ? 'text-green' : bodyMetrics.hba1c < 7 ? 'text-gold' : 'text-red' } : null,
           ].filter(Boolean).map((c, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.06 }}
-              className="flex-shrink-0 w-[110px] bg-surface border border-border rounded-2xl p-4"
-            >
+            <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
+              className="flex-shrink-0 w-[110px] bg-surface border border-border rounded-2xl p-4">
               <div className={`text-[26px] font-light tracking-tight ${c!.status}`}>{c!.val}</div>
               <div className="text-[10px] text-muted mt-1 tracking-wider">{c!.label}</div>
             </motion.div>
@@ -128,12 +309,12 @@ export default function Dashboard() {
       {/* Current medications */}
       {meds.length > 0 && (
         <div className="mb-3">
-          <div className="text-[10px] text-muted uppercase tracking-[0.08em] font-medium mb-2 px-0.5">用药</div>
+          <div className="text-[10px] text-muted uppercase tracking-[0.08em] font-medium mb-2 px-0.5">当前用药</div>
           <div className="flex gap-2 flex-wrap">
             {meds.map(m => (
               <div key={m.id} className="inline-flex items-center gap-2 bg-surface border border-border rounded-full py-1.5 px-3.5 text-xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-                <span className="text-text">{m.drug.length > 14 ? m.drug.slice(0,14)+'…' : m.drug}</span>
+                <span className="text-text">{m.drug.length > 14 ? m.drug.slice(0, 14) + '…' : m.drug}</span>
               </div>
             ))}
           </div>
@@ -141,16 +322,10 @@ export default function Dashboard() {
       )}
 
       {/* Current glucose reading */}
-      {lastVal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="bg-surface border border-border rounded-2xl p-5 mb-3 relative overflow-hidden"
-        >
-          {/* Top gold line */}
+      {lastVal != null && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+          className="bg-surface border border-border rounded-2xl p-5 mb-3 relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
-
           <div className="flex justify-between items-start mb-3">
             <span className="text-[10px] text-muted uppercase tracking-[0.08em] font-medium">当前血糖</span>
             <span className="text-[11px] text-muted">
@@ -160,85 +335,103 @@ export default function Dashboard() {
           <div className="flex items-end gap-2 mb-4">
             <span className={`text-[48px] font-light tracking-[-2px] leading-none ${glucoseColor}`}>{lastVal}</span>
             <span className="text-xs text-muted pb-2">mg/dL</span>
-            {trend && <span className={`text-xl pb-1.5 ${lastVal! - stats!.prev! > 5 ? 'text-amber' : lastVal! - stats!.prev! < -5 ? 'text-blue' : 'text-muted'}`}>{trend}</span>}
+            {trend && <span className={`text-xl pb-1.5 ${lastVal - (stats?.prev ?? lastVal) > 5 ? 'text-amber' : lastVal - (stats?.prev ?? lastVal) < -5 ? 'text-blue' : 'text-muted'}`}>{trend}</span>}
           </div>
-
-          {/* Range bar */}
-          <div className="relative h-1.5 bg-surface3 rounded-full overflow-visible">
+          <div className="relative h-1.5 bg-surface3 rounded-full overflow-visible mb-2">
             <div className="absolute inset-0 flex rounded-full overflow-hidden">
               <div className="w-[14.3%] bg-red/25" />
               <div className="w-[55.3%] bg-green/15" />
               <div className="flex-1 bg-amber/20" />
             </div>
-            <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-bg shadow-lg transition-all duration-500 z-[2]"
-              style={{ left: pointerPct + '%', backgroundColor: lastVal < 70 ? 'var(--color-red)' : lastVal > 180 ? 'var(--color-amber)' : 'var(--color-green)' }}
-            />
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-bg shadow-lg transition-all duration-500 z-[2]"
+              style={{ left: pointerPct + '%', backgroundColor: lastVal < 70 ? 'var(--color-red)' : lastVal > 180 ? 'var(--color-amber)' : 'var(--color-green)' }} />
           </div>
-          <div className="flex justify-between mt-2">
-            {['55','70','目标范围','180','250'].map(l => <span key={l} className="text-[9px] text-muted2">{l}</span>)}
+          <div className="flex justify-between">
+            {['55', '70', '目标范围', '180', '250'].map(l => <span key={l} className="text-[9px] text-muted2">{l}</span>)}
           </div>
         </motion.div>
       )}
 
-      {/* TIR distribution bar */}
-      {stats && (
-        <Card title="TIR 分布">
-          <div className="flex h-2 rounded-full gap-[2px] mb-3">
-            <div className="rounded-full bg-red/60 transition-all duration-700" style={{ width: stats.lowPct + '%', minWidth: stats.lowPct > 0 ? 3 : 0 }} />
-            <div className="rounded-full bg-green/50 transition-all duration-700" style={{ width: stats.tir + '%', minWidth: 3 }} />
-            <div className="rounded-full bg-amber/50 transition-all duration-700" style={{ width: stats.highPct + '%', minWidth: stats.highPct > 0 ? 3 : 0 }} />
+      {/* 24h CGM mini chart */}
+      {h24.length > 0 && (
+        <Card>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[10px] text-muted uppercase tracking-wider font-semibold">近24小时趋势</span>
+            {stats && (
+              <div className="flex gap-3 text-[10px]">
+                <span className="flex items-center gap-1 text-red/70"><span className="w-1.5 h-1.5 rounded-full bg-red/60" />低 {stats.lowPct}%</span>
+                <span className="flex items-center gap-1 text-green/80"><span className="w-1.5 h-1.5 rounded-full bg-green/50" />达标 {stats.tir}%</span>
+                <span className="flex items-center gap-1 text-amber/70"><span className="w-1.5 h-1.5 rounded-full bg-amber/50" />高 {stats.highPct}%</span>
+              </div>
+            )}
           </div>
-          <div className="flex gap-4 text-[11px] text-muted">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red/60" />低 {stats.lowPct}%</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green/50" />达标 {stats.tir}%</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber/50" />偏高 {stats.highPct}%</span>
+          <div className="h-[160px]">
+            <Line data={miniChartData} options={miniChartOpts as any} />
           </div>
+          {stats && (
+            <div className="flex h-1.5 rounded-full gap-[2px] mt-3">
+              <div className="rounded-full bg-red/60 transition-all" style={{ width: stats.lowPct + '%', minWidth: stats.lowPct > 0 ? 3 : 0 }} />
+              <div className="rounded-full bg-green/50 transition-all" style={{ width: stats.tir + '%', minWidth: 3 }} />
+              <div className="rounded-full bg-amber/50 transition-all" style={{ width: stats.highPct + '%', minWidth: stats.highPct > 0 ? 3 : 0 }} />
+            </div>
+          )}
         </Card>
       )}
 
-      {/* Body metrics */}
-      {bodyMetrics.bmi && (
-        <Card title="身体指标">
-          <div className="grid grid-cols-2 gap-2.5">
-            {[
-              { label: 'BMI', val: bodyMetrics.bmi.toFixed(1), col: bodyMetrics.bmi < 25 ? 'text-green' : bodyMetrics.bmi < 30 ? 'text-amber' : 'text-red' },
-              { label: '体重', val: (bodyMetrics.weightLbs || '--') + ' lbs', col: '' },
-              { label: 'HbA1c', val: bodyMetrics.hba1c ? bodyMetrics.hba1c + '%' : '--', col: '' },
-              { label: '空腹血糖', val: bodyMetrics.fasting ? bodyMetrics.fasting + '' : '--', col: '' },
-            ].map(m => (
-              <div key={m.label} className="bg-surface2 border border-border rounded-xl p-4">
-                <div className="text-[10px] text-muted uppercase tracking-[0.08em] font-medium mb-1.5">{m.label}</div>
-                <div className={`text-xl font-light tracking-tight ${m.col || 'text-text'}`}>{m.val}</div>
+      {/* Auto insights */}
+      {insights.length > 0 && (
+        <Card title="智能洞察">
+          <div className="space-y-3">
+            {insights.map((ins, i) => (
+              <div key={i} className="flex gap-3 items-start">
+                <span className="text-xl flex-shrink-0 mt-0.5">{ins.icon}</span>
+                <div>
+                  <div className="text-sm font-medium">{ins.title}</div>
+                  <div className="text-xs text-muted mt-0.5 leading-relaxed">{ins.desc}</div>
+                </div>
               </div>
             ))}
           </div>
         </Card>
       )}
 
+      {/* Body metrics with BMI gauge */}
+      {(bodyMetrics.bmi != null || bodyMetrics.weightLbs != null) && (
+        <Card title="身体指标">
+          <div className="flex items-start gap-3 flex-wrap">
+            {bodyMetrics.bmi != null && <BmiGauge bmi={bodyMetrics.bmi} />}
+            <div className="flex-1 grid grid-cols-2 gap-2 min-w-[160px]">
+              {[
+                { label: '目标空腹', val: '80–130 mg/dL', col: '' },
+                { label: '目标餐后', val: '<180 mg/dL', col: '' },
+                { label: '体重', val: bodyMetrics.weightLbs ? bodyMetrics.weightLbs + ' lbs' : '--', col: '' },
+                { label: 'HbA1c', val: bodyMetrics.hba1c ? bodyMetrics.hba1c + '%' : '--', col: bodyMetrics.hba1c ? (bodyMetrics.hba1c < 6 ? 'text-green' : bodyMetrics.hba1c < 7 ? 'text-gold' : 'text-red') : '' },
+                { label: '热量预算', val: bodyMetrics.totalKcal + ' kcal', col: '' },
+                { label: '空腹血糖', val: bodyMetrics.fasting ? bodyMetrics.fasting + '' : '--', col: bodyMetrics.fasting ? (bodyMetrics.fasting <= 100 ? 'text-green' : bodyMetrics.fasting <= 130 ? 'text-gold' : 'text-red') : '' },
+              ].map(m => (
+                <div key={m.label} className="bg-surface2 border border-border rounded-xl p-3">
+                  <div className="text-[10px] text-muted uppercase tracking-[0.08em] font-medium mb-1">{m.label}</div>
+                  <div className={`text-xs font-medium tracking-tight ${m.col || 'text-text'}`}>{m.val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Meal & Exercise tabs */}
-      <MealExerciseCard />
+      <MealExerciseCard plan={nutritionPlan} />
 
       {/* AI buttons */}
       <div className="grid grid-cols-2 gap-2.5 mb-3">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-surface border border-gold/10 rounded-2xl p-4 cursor-pointer group"
-          onClick={() => setChatOpen(true)}
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+          className="bg-surface border border-gold/10 rounded-2xl p-4 cursor-pointer group" onClick={() => setChatOpen(true)}>
           <div className="text-2xl mb-2">💬</div>
           <div className="text-sm font-medium text-text group-hover:text-gold transition-colors">AI 助手</div>
           <div className="text-[11px] text-muted mt-0.5">对话式数据分析</div>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
-          className="bg-surface border border-gold/10 rounded-2xl p-4 cursor-pointer group"
-          onClick={() => setActivePage('ai')}
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+          className="bg-surface border border-gold/10 rounded-2xl p-4 cursor-pointer group" onClick={() => setActivePage('ai')}>
           <div className="text-2xl mb-2">✨</div>
           <div className="text-sm font-medium text-text group-hover:text-gold transition-colors">深度分析</div>
           <div className="text-[11px] text-muted mt-0.5">自定义分析报告</div>
@@ -248,33 +441,30 @@ export default function Dashboard() {
   )
 }
 
-/* ── Meal Plan & Exercise Card ── */
-const MEALS = [
-  { name: '早餐', time: '08:00', kcal: 360, p: 26, f: 18, c: 24, tag: '蛋白质优先',
-    foods: '2全蛋 + 额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄' },
-  { name: '加餐', time: '10:30', kcal: 175, p: 26, f: 7, c: 4, tag: '补充蛋白',
-    foods: '蛋白粉1勺（30g）· 混合坚果10g' },
-  { name: '午餐', time: '13:00', kcal: 443, p: 54, f: 10, c: 36, tag: '碳水高峰',
-    foods: '鸡胸肉150g · 糙米饭100g · 西兰花150g · 橄榄油1茶匙' },
-  { name: '加餐', time: '14:30', kcal: 156, p: 33, f: 2, c: 3, tag: '双倍蛋白',
-    foods: '蛋白粉1勺 · 胶原蛋白肽1勺' },
-  { name: '晚餐', time: '17:30', kcal: 428, p: 42, f: 17, c: 28, tag: '控碳稳糖',
-    foods: '三文鱼130g · 烤红薯80g · 芦笋150g · 嫩豆腐80g' },
+/* ── Meal/Exercise card ── */
+const BASE_MEALS = [
+  { name: '早餐', time: '08:00', kcal: 360, p: 26, f: 18, c: 24, tag: '蛋白质优先', foods: '2全蛋 + 额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄' },
+  { name: '上午加餐', time: '10:30', kcal: 175, p: 26, f: 7, c: 4, tag: '补充蛋白', foods: '蛋白粉1勺（30g）· 混合坚果10g' },
+  { name: '午餐', time: '13:00', kcal: 443, p: 54, f: 10, c: 36, tag: '碳水高峰', foods: '鸡胸肉150g · 糙米饭100g · 西兰花150g · 橄榄油1茶匙' },
+  { name: '下午加餐', time: '14:30', kcal: 156, p: 33, f: 2, c: 3, tag: '双倍蛋白', foods: '蛋白粉1勺 · 胶原蛋白肽1勺' },
+  { name: '晚餐', time: '17:30', kcal: 428, p: 42, f: 17, c: 28, tag: '控碳稳糖', foods: '三文鱼130g · 烤红薯80g · 芦笋150g · 嫩豆腐80g' },
+  { name: '晚间可选', time: '21:30', kcal: 35, p: 3, f: 1, c: 4, tag: '低热量', foods: '花草茶 或 少量低脂牛奶' },
 ]
+const BASE_KCAL = BASE_MEALS.reduce((s, m) => s + m.kcal, 0)
+const BASE_P = BASE_MEALS.reduce((s, m) => s + m.p, 0)
+const BASE_F = BASE_MEALS.reduce((s, m) => s + m.f, 0)
+const BASE_C = BASE_MEALS.reduce((s, m) => s + m.c, 0)
 
 const TYPE_COLORS: Record<string, string> = {
-  strength: 'rgba(200,169,125,0.7)',
-  cardio: 'rgba(92,184,138,0.6)',
-  yoga: 'rgba(107,159,212,0.6)',
-  rest: 'rgba(255,255,255,0.04)',
+  strength: 'rgba(200,169,125,0.7)', cardio: 'rgba(92,184,138,0.6)',
+  yoga: 'rgba(107,159,212,0.6)', rest: 'rgba(255,255,255,0.04)',
 }
 
-function MealExerciseCard() {
+function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
   const [tab, setTab] = useState<'meal' | 'exercise'>('meal')
   const [expandedDay, setExpandedDay] = useState<number | null>(null)
   const todayDow = new Date().getDay()
 
-  // Auto-expand today
   useEffect(() => {
     if (tab === 'exercise') {
       const idx = WEEK_PLAN.findIndex(d => d.dow === todayDow)
@@ -282,46 +472,48 @@ function MealExerciseCard() {
     }
   }, [tab, todayDow])
 
+  const meals = useMemo(() => {
+    if (!plan) return BASE_MEALS
+    return BASE_MEALS.map(m => ({
+      ...m,
+      kcal: Math.round(m.kcal * plan.kcal / BASE_KCAL),
+      p: Math.round(m.p * plan.proteinG / BASE_P),
+      f: Math.round(m.f * plan.fatG / BASE_F),
+      c: Math.round(m.c * plan.carbG / BASE_C),
+    }))
+  }, [plan])
+
+  const totalKcal = meals.reduce((s, m) => s + m.kcal, 0)
+  const totalP = meals.reduce((s, m) => s + m.p, 0)
+  const totalF = meals.reduce((s, m) => s + m.f, 0)
+  const totalC = meals.reduce((s, m) => s + m.c, 0)
+
   const mealChartData = {
-    labels: MEALS.map(m => m.name),
+    labels: meals.map(m => m.name),
     datasets: [
-      { label: '蛋白质', data: MEALS.map(m => m.p), backgroundColor: 'rgba(200,169,125,0.75)', borderRadius: 4, stack: 'm' },
-      { label: '脂肪', data: MEALS.map(m => m.f), backgroundColor: 'rgba(212,168,75,0.6)', borderRadius: 0, stack: 'm' },
-      { label: '碳水', data: MEALS.map(m => m.c), backgroundColor: 'rgba(107,159,212,0.6)', borderRadius: 4, stack: 'm' },
+      { label: '蛋白质(g)', data: meals.map(m => m.p), backgroundColor: 'rgba(99,102,241,0.82)', borderRadius: 4, stack: 'm' },
+      { label: '脂肪(g)', data: meals.map(m => m.f), backgroundColor: 'rgba(217,119,6,0.75)', borderRadius: 0, stack: 'm' },
+      { label: '碳水(g)', data: meals.map(m => m.c), backgroundColor: 'rgba(37,99,235,0.78)', borderRadius: 4, stack: 'm' },
     ]
   }
-
   const exerciseChartData = {
     labels: WEEK_PLAN.map(d => d.name),
-    datasets: [{
-      data: WEEK_PLAN.map(d => d.duration || 5),
-      backgroundColor: WEEK_PLAN.map(d => TYPE_COLORS[d.type]),
-      borderRadius: 8, barPercentage: 0.6,
-    }]
+    datasets: [{ data: WEEK_PLAN.map(d => d.duration || 5), backgroundColor: WEEK_PLAN.map(d => TYPE_COLORS[d.type]), borderRadius: 8, barPercentage: 0.6 }]
   }
-
-  const chartOpts = {
+  const baseOpts = {
     responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: tab === 'meal' ? { display: true, position: 'top' as const, labels: { color: '#7a756b', font: { size: 10 }, boxWidth: 8, padding: 12 } } : { display: false },
-    },
     scales: {
-      y: { stacked: tab === 'meal', ticks: { color: '#7a756b', font: { size: 10 }, callback: (v: number) => v + (tab === 'meal' ? 'g' : '分') }, grid: { color: 'rgba(200,169,125,0.04)' }, border: { display: false } },
+      y: { stacked: tab === 'meal', ticks: { color: '#7a756b', font: { size: 10 } }, grid: { color: 'rgba(200,169,125,0.04)' }, border: { display: false } },
       x: { stacked: tab === 'meal', ticks: { color: '#7a756b', font: { size: 10 } }, grid: { display: false } },
     }
   }
 
-  const totalKcal = MEALS.reduce((s, m) => s + m.kcal, 0)
-  const totalP = MEALS.reduce((s, m) => s + m.p, 0)
-
   return (
     <Card>
-      {/* Tab */}
       <div className="flex mb-4 border-b border-border">
-        {[{id: 'meal' as const, label: '膳食计划'}, {id: 'exercise' as const, label: '运动日历'}].map(t => (
+        {[{ id: 'meal' as const, label: '膳食计划' }, { id: 'exercise' as const, label: '运动日历' }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex-1 pb-2.5 text-xs border-none bg-transparent cursor-pointer transition-all duration-300
-              ${tab === t.id ? 'text-gold font-medium' : 'text-muted'}`}
+            className={`flex-1 pb-2.5 text-xs border-none bg-transparent cursor-pointer transition-all ${tab === t.id ? 'text-gold font-medium' : 'text-muted'}`}
             style={tab === t.id ? { borderBottom: '2px solid var(--color-gold)', marginBottom: '-1px' } : {}}>
             {t.label}
           </button>
@@ -330,22 +522,30 @@ function MealExerciseCard() {
 
       {tab === 'meal' ? (
         <>
-          <div className="text-[11px] text-muted mb-3">全日 ~{totalKcal} kcal · 蛋白 ~{totalP}g</div>
+          {plan?.aiGenerated && (
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] bg-gold/10 text-gold px-2 py-0.5 rounded-full font-medium">✨ AI 今日定制</span>
+            </div>
+          )}
+          {plan?.mealNote && (
+            <div className="text-[11px] text-gold/80 bg-gold/6 border border-gold/15 rounded-xl px-3 py-2 mb-3">
+              💡 {plan.mealNote}
+            </div>
+          )}
+          <div className="text-[11px] text-muted mb-3">全日 ~{totalKcal} kcal · 蛋白 ~{totalP}g · 脂肪 ~{totalF}g · 碳水 ~{totalC}g</div>
           <div className="h-[200px]">
-            <Bar data={mealChartData} options={chartOpts as any} />
+            <Bar data={mealChartData} options={{ ...baseOpts, plugins: { legend: { display: true, position: 'top' as const, labels: { color: '#7a756b', font: { size: 10 }, boxWidth: 8, padding: 12 } } } } as any} />
           </div>
-          {/* Macro strip */}
-          <div className="flex gap-4 mt-3 mb-4 text-[11px]">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-gold/75" />蛋白 {totalP}g</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-amber/60" />脂肪 {MEALS.reduce((s,m)=>s+m.f,0)}g</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-blue/60" />碳水 {MEALS.reduce((s,m)=>s+m.c,0)}g</span>
+          <div className="flex gap-4 mt-3 mb-4 text-[11px] flex-wrap">
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(99,102,241,0.82)' }} />蛋白 {totalP}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(217,119,6,0.75)' }} />脂肪 {totalF}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(37,99,235,0.78)' }} />碳水 {totalC}g</span>
           </div>
-          {/* Meal cards */}
           <div className="space-y-2">
-            {MEALS.map((m, i) => (
+            {meals.map((m, i) => (
               <div key={i} className="bg-surface2 border border-border rounded-xl p-3.5">
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium">{m.name}</span>
                     <span className="text-[10px] text-muted bg-surface3 px-2 py-0.5 rounded-md">{m.time}</span>
                     <span className="text-[10px] text-gold/80 bg-gold/8 px-2 py-0.5 rounded-md">{m.tag}</span>
@@ -364,28 +564,31 @@ function MealExerciseCard() {
         </>
       ) : (
         <>
+          {plan?.exerciseFocus && (
+            <div className="flex items-center gap-2 mb-3 text-[11px] bg-surface2 border-l-2 border-gold rounded-r-xl px-3 py-2.5">
+              <span className="text-gold">🎯</span>
+              <span className="text-muted">本周运动重点：</span>
+              <span className="text-gold font-medium">{plan.exerciseFocus}</span>
+            </div>
+          )}
           <div className="h-[160px] mb-3">
-            <Bar data={exerciseChartData} options={{ ...chartOpts, plugins: { legend: { display: false } } } as any} />
+            <Bar data={exerciseChartData} options={{ ...baseOpts, plugins: { legend: { display: false } } } as any} />
           </div>
-          {/* Legend */}
           <div className="flex gap-3 mb-4 text-[10px] text-muted flex-wrap">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-gold/70" />力量训练</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-green/60" />有氧恢复</span>
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-blue/60" />主动恢复</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded bg-surface3 border border-border" />休息</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded border border-border" style={{ background: 'rgba(255,255,255,0.04)' }} />休息</span>
           </div>
-          {/* Day list */}
           <div>
             {WEEK_PLAN.map((day, idx) => {
               const isToday = day.dow === todayDow
               const open = expandedDay === idx
               return (
                 <div key={idx}>
-                  <div
-                    onClick={() => day.exercises.length && setExpandedDay(open ? null : idx)}
-                    className={`flex items-center gap-3 py-3 border-b border-border2 cursor-pointer transition-colors ${day.exercises.length ? 'hover:bg-surface2' : ''}`}
-                  >
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base"
+                  <div onClick={() => day.exercises.length && setExpandedDay(open ? null : idx)}
+                    className={`flex items-center gap-3 py-3 border-b border-border2 transition-colors ${day.exercises.length ? 'cursor-pointer hover:bg-surface2/50 rounded-lg px-1' : ''}`}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
                       style={{ background: TYPE_COLORS[day.type] + '20' }}>{day.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium flex items-center gap-2">
@@ -394,23 +597,19 @@ function MealExerciseCard() {
                       </div>
                       <div className="text-[11px] text-muted">{day.label}{day.intensity !== '—' ? ' · ' + day.intensity : ''}</div>
                     </div>
-                    <span className="text-xs text-muted">{day.duration ? day.duration + '分' : '—'}</span>
+                    <span className="text-xs text-muted flex-shrink-0">{day.duration ? day.duration + '分' : '—'}</span>
                     {day.exercises.length > 0 && (
-                      <span className={`text-muted text-xs transition-transform duration-200 ${open ? 'rotate-90' : ''}`}>›</span>
+                      <span className={`text-muted text-sm transition-transform duration-200 flex-shrink-0 ${open ? 'rotate-90' : ''}`}>›</span>
                     )}
                   </div>
                   {open && day.exercises.length > 0 && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      className="pl-12 pb-2 overflow-hidden"
-                    >
-                      <div className="text-[11px] text-muted mb-2 leading-relaxed">{day.desc}</div>
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="pl-12 pb-3 overflow-hidden">
+                      <div className="text-[11px] text-muted mb-2 leading-relaxed pt-2">{day.desc}</div>
                       {day.exercises.map((ex, ei) => (
-                        <div key={ei} className="flex items-center justify-between py-2 border-b border-border2 last:border-b-0">
+                        <div key={ei} className="flex items-start justify-between py-2 border-b border-border2 last:border-b-0">
                           <div>
                             <div className="text-xs font-medium">{ex.name}</div>
-                            <div className="text-[10px] text-muted">{ex.detail}</div>
+                            <div className="text-[10px] text-muted mt-0.5">{ex.detail}</div>
                           </div>
                         </div>
                       ))}
