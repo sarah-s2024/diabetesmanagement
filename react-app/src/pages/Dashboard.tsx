@@ -296,28 +296,32 @@ export default function Dashboard() {
           <div className="flex gap-2.5 overflow-x-auto pb-3 mb-2 scrollbar-none">
             {[
               {
+                // Normal non-diabetic CGM avg: ≤100 normal, 101–115 borderline, >115 elevated
                 icon: '📊', label: 'CGM 均值', val: stats.avg, unit: 'mg/dL',
-                statusCls: stats.avg <= 140 ? 'text-green' : stats.avg <= 180 ? 'text-gold' : 'text-red',
-                dotCls: stats.avg <= 140 ? 'bg-green' : stats.avg <= 180 ? 'bg-gold' : 'bg-red',
-                statusText: stats.avg <= 140 ? '正常' : stats.avg <= 180 ? '偏高' : '过高',
+                statusCls: stats.avg <= 100 ? 'text-green' : stats.avg <= 115 ? 'text-gold' : 'text-red',
+                dotCls: stats.avg <= 100 ? 'bg-green' : stats.avg <= 115 ? 'bg-gold' : 'bg-red',
+                statusText: stats.avg <= 100 ? '正常' : stats.avg <= 115 ? '关注' : '偏高',
               },
               gmi ? {
+                // GMI = estimated HbA1c; <5.7% normal, 5.7–6.4% pre-diabetic, ≥6.5% diabetic
                 icon: '🧮', label: 'GMI', val: gmi, unit: '%',
-                statusCls: gmi < 6 ? 'text-green' : gmi < 7 ? 'text-gold' : 'text-red',
-                dotCls: gmi < 6 ? 'bg-green' : gmi < 7 ? 'bg-gold' : 'bg-red',
-                statusText: gmi < 6 ? '理想' : gmi < 7 ? '良好' : '偏高',
+                statusCls: gmi < 5.7 ? 'text-green' : gmi < 6.5 ? 'text-gold' : 'text-red',
+                dotCls: gmi < 5.7 ? 'bg-green' : gmi < 6.5 ? 'bg-gold' : 'bg-red',
+                statusText: gmi < 5.7 ? '理想' : gmi < 6.5 ? '关注' : '偏高',
               } : null,
               {
+                // SD in healthy non-diabetics typically <20; ≤20 low, ≤30 moderate, >30 high
                 icon: '〰️', label: '血糖变异', val: stats.sd, unit: 'SD',
-                statusCls: stats.sd <= 30 ? 'text-green' : stats.sd <= 50 ? 'text-gold' : 'text-red',
-                dotCls: stats.sd <= 30 ? 'bg-green' : stats.sd <= 50 ? 'bg-gold' : 'bg-red',
-                statusText: stats.sd <= 30 ? '波动低' : stats.sd <= 50 ? '波动中' : '波动高',
+                statusCls: stats.sd <= 20 ? 'text-green' : stats.sd <= 30 ? 'text-gold' : 'text-red',
+                dotCls: stats.sd <= 20 ? 'bg-green' : stats.sd <= 30 ? 'bg-gold' : 'bg-red',
+                statusText: stats.sd <= 20 ? '波动低' : stats.sd <= 30 ? '波动中' : '波动高',
               },
               bodyMetrics.hba1c ? {
+                // ADA: <5.7% normal, 5.7–6.4% pre-diabetic, ≥6.5% diabetic
                 icon: '🩸', label: 'HbA1c', val: bodyMetrics.hba1c, unit: '%',
-                statusCls: bodyMetrics.hba1c < 6 ? 'text-green' : bodyMetrics.hba1c < 7 ? 'text-gold' : 'text-red',
-                dotCls: bodyMetrics.hba1c < 6 ? 'bg-green' : bodyMetrics.hba1c < 7 ? 'bg-gold' : 'bg-red',
-                statusText: bodyMetrics.hba1c < 6 ? '理想' : bodyMetrics.hba1c < 7 ? '良好' : '偏高',
+                statusCls: bodyMetrics.hba1c < 5.7 ? 'text-green' : bodyMetrics.hba1c < 6.5 ? 'text-gold' : 'text-red',
+                dotCls: bodyMetrics.hba1c < 5.7 ? 'bg-green' : bodyMetrics.hba1c < 6.5 ? 'bg-gold' : 'bg-red',
+                statusText: bodyMetrics.hba1c < 5.7 ? '理想' : bodyMetrics.hba1c < 6.5 ? '关注' : '偏高',
               } : null,
             ].filter(Boolean).map((c, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
