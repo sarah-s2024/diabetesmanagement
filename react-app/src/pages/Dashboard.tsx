@@ -608,6 +608,11 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
                   <span className="text-amber/80">脂肪 {m.f}g</span>
                   <span className="text-blue/80">碳水 {m.c}g</span>
                 </div>
+                {m.note && (
+                  <div className="mt-2 text-[10px] text-muted/70 leading-relaxed border-t border-border pt-2">
+                    {m.note}
+                  </div>
+                )}
               </div>
             ))}
           </div>
