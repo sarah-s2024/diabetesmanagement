@@ -10,8 +10,22 @@ ChartJS.register(...registerables)
 type Tab = 'glucose' | 'bp' | 'weight'
 
 export default function HistoryPage() {
-  const { dailyRecords } = useApp()
+  const { dailyRecords, user, refreshData } = useApp()
   const [tab, setTab] = useState<Tab>('glucose')
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  const handleDelete = async (recordDate: string) => {
+    if (!user) return
+    if (!window.confirm(`确认删除 ${recordDate} 的记录？`)) return
+    setDeleting(recordDate)
+    try {
+      await deleteDailyRecord(user.id, recordDate)
+      await refreshData()
+    } catch (e: any) {
+      alert('删除失败：' + e.message)
+    }
+    setDeleting(null)
+  }
 
   const chartData = useMemo(() => {
     const sorted = [...dailyRecords].reverse()
