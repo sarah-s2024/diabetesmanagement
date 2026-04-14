@@ -687,7 +687,7 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded border border-border" style={{ background: 'rgba(255,255,255,0.04)' }} />休息</span>
           </div>
           <div>
-            {WEEK_PLAN.map((day, idx) => {
+            {activePlan.map((day, idx) => {
               const isToday = day.dow === todayDow
               const open = expandedDay === idx
               return (
