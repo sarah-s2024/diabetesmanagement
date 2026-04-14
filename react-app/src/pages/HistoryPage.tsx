@@ -123,7 +123,7 @@ export default function HistoryPage() {
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr>
-                {['日期', '空腹', '餐后', '血压', '体重', 'A1c', '状态'].map(h => (
+                {['日期', '空腹', '餐后', '血压', '体重', 'A1c', '状态', ''].map(h => (
                   <th key={h} className="text-left py-2 px-2.5 text-[10px] text-muted font-semibold border-b border-border uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
