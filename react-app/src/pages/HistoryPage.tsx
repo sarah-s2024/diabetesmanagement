@@ -60,9 +60,11 @@ export default function HistoryPage() {
   }
 
   const statusBadge = (r: typeof dailyRecords[0]) => {
+    // Normal: fasting <100 AND post-meal <140 (non-diabetic ADA standards)
     if (r.fasting_glucose && r.fasting_glucose < 100 && (!r.post_meal_glucose || r.post_meal_glucose < 140))
       return <Badge color="green">达标</Badge>
-    if (r.fasting_glucose && r.fasting_glucose > 130)
+    // Diabetic range: fasting ≥126 or post-meal ≥200
+    if ((r.fasting_glucose && r.fasting_glucose >= 126) || (r.post_meal_glucose && r.post_meal_glucose >= 200))
       return <Badge color="red">偏高</Badge>
     return <Badge color="amber">关注</Badge>
   }
