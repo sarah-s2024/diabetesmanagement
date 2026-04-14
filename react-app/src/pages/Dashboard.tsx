@@ -673,8 +673,9 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
           {plan?.exerciseFocus && (
             <div className="flex items-center gap-2 mb-3 text-[11px] bg-surface2 border-l-2 border-gold rounded-r-xl px-3 py-2.5">
               <span className="text-gold">🎯</span>
-              <span className="text-muted">本周运动重点：</span>
+              <span className="text-muted">本周重点：</span>
               <span className="text-gold font-medium">{plan.exerciseFocus}</span>
+              {plan.weekPlan?.length ? <span className="ml-auto text-[9px] bg-gold/10 text-gold px-2 py-0.5 rounded-full font-medium flex-shrink-0">✨ AI 定制</span> : null}
             </div>
           )}
           <div className="h-[160px] mb-3">
