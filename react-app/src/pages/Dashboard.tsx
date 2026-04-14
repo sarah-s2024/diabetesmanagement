@@ -584,7 +584,7 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
           )}
           <div className="text-[11px] text-muted mb-3">全日 ~{totalKcal} kcal · 蛋白 ~{totalP}g · 脂肪 ~{totalF}g · 碳水 ~{totalC}g</div>
           <div className="h-[200px]">
-            <Bar data={mealChartData} options={{ ...baseOpts, plugins: { legend: { display: true, position: 'top' as const, labels: { color: '#7a756b', font: { size: 10 }, boxWidth: 8, padding: 12 } } } } as any} />
+            <Bar data={mealChartData} options={{ ...baseOpts, plugins: { legend: { display: true, position: 'top' as const, labels: { color: '#a09882', font: { size: 10 }, boxWidth: 8, padding: 12 } } } } as any} />
           </div>
           <div className="flex gap-4 mt-3 mb-4 text-[11px] flex-wrap">
             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(99,102,241,0.82)' }} />蛋白 {totalP}g</span>
