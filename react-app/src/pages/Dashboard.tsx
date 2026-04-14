@@ -540,11 +540,31 @@ const TYPE_COLORS: Record<string, string> = {
   strength: 'rgba(200,169,125,0.7)', cardio: 'rgba(92,184,138,0.6)',
   yoga: 'rgba(107,159,212,0.6)', rest: 'rgba(255,255,255,0.04)',
 }
+const TYPE_ICONS: Record<string, string> = {
+  strength: '🏋️', cardio: '🚶', yoga: '🧘', rest: '🛌',
+}
 
 function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
   const [tab, setTab] = useState<'meal' | 'exercise'>('meal')
   const [expandedDay, setExpandedDay] = useState<number | null>(null)
   const todayDow = new Date().getDay()
+
+  // Merge AI weekPlan with static WEEK_PLAN: AI provides schedule, static provides exercise details
+  const activePlan = useMemo(() => {
+    if (!plan?.weekPlan?.length) return WEEK_PLAN
+    return WEEK_PLAN.map(staticDay => {
+      const aiDay = plan.weekPlan!.find(d => d.dow === staticDay.dow)
+      if (!aiDay) return staticDay
+      return {
+        ...staticDay,
+        type: aiDay.type,
+        duration: aiDay.duration,
+        intensity: aiDay.intensity,
+        label: aiDay.label,
+        icon: TYPE_ICONS[aiDay.type] ?? staticDay.icon,
+      }
+    })
+  }, [plan?.weekPlan])
 
   useEffect(() => {
     if (tab === 'exercise') {
