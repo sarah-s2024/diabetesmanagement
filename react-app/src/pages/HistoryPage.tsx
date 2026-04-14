@@ -140,6 +140,14 @@ export default function HistoryPage() {
                   <td className="py-2 px-2.5 border-b border-border2">{r.weight_lbs || '--'}</td>
                   <td className="py-2 px-2.5 border-b border-border2">{r.hba1c || '--'}</td>
                   <td className="py-2 px-2.5 border-b border-border2">{statusBadge(r)}</td>
+                  <td className="py-2 px-2.5 border-b border-border2">
+                    <button
+                      onClick={() => handleDelete(r.record_date)}
+                      disabled={deleting === r.record_date}
+                      className="text-[10px] py-1 px-2 rounded-lg border border-red/20 text-red/60 hover:text-red hover:border-red/40 bg-transparent cursor-pointer transition-colors disabled:opacity-40">
+                      {deleting === r.record_date ? '…' : '删除'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
