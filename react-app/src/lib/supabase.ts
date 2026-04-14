@@ -83,6 +83,16 @@ export async function upsertDailyRecord(userId: number, record: Partial<DailyRec
   if (error) throw error
 }
 
+export async function deleteDailyRecord(userId: number, recordDate: string) {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not connected')
+  const { error } = await sb.from('daily_records')
+    .delete()
+    .eq('user_id', userId)
+    .eq('record_date', recordDate)
+  if (error) throw error
+}
+
 export async function upsertCgmBatch(userId: number, batch: { device_timestamp: string; glucose_mg_dl: number }[]) {
   const sb = getSupabase()
   if (!sb) throw new Error('Supabase not connected')
