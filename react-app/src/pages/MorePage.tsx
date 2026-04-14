@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Card, { Badge } from '../components/Card'
 import { upsertCgmBatch } from '../lib/supabase'
