@@ -206,8 +206,14 @@ export default function Dashboard() {
     const bmi = weightKg ? weightKg / (heightCm / 100) ** 2 : null
     const hba1c = dailyRecords.find(r => r.hba1c)?.hba1c ?? null
     const fasting = dailyRecords[0]?.fasting_glucose ?? null
-    const totalKcal = weightKg ? Math.max(1400, Math.round(weightKg * 25 / 100) * 100) : 1800
-    return { weightLbs, weightKg, bmi, hba1c, fasting, heightCm, totalKcal }
+    const ree = getRee()
+    const weeklyGoalLbs = getWeightGoalLbs()
+    const tdee = ree
+      ? Math.round(ree * 1.35)
+      : (weightKg ? Math.round(weightKg * 25) : 1800)
+    const deficit = weeklyGoalLbs ? Math.round(weeklyGoalLbs * 500) : 0
+    const totalKcal = Math.max(1200, Math.round((tdee - deficit) / 100) * 100)
+    return { weightLbs, weightKg, bmi, hba1c, fasting, heightCm, totalKcal, ree, weeklyGoalLbs, tdee, deficit }
   }, [dailyRecords, cfg])
 
   const meds = useMemo(() => getActiveMeds(), [])
