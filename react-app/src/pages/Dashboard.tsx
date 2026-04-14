@@ -649,11 +649,19 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="pl-12 pb-3 overflow-hidden">
                       <div className="text-[11px] text-muted mb-2 leading-relaxed pt-2">{day.desc}</div>
                       {day.exercises.map((ex, ei) => (
-                        <div key={ei} className="flex items-start justify-between py-2 border-b border-border2 last:border-b-0">
-                          <div>
+                        <div key={ei} className="flex items-center justify-between py-2 border-b border-border2 last:border-b-0 gap-2">
+                          <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium">{ex.name}</div>
                             <div className="text-[10px] text-muted mt-0.5">{ex.detail}</div>
                           </div>
+                          {ex.youtube && (
+                            <a href={ex.youtube} target="_blank" rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              className="flex-shrink-0 flex items-center gap-1 text-[10px] font-medium text-gold/80 bg-gold/10 border border-gold/20 rounded-lg px-2.5 py-1.5 hover:bg-gold/20 hover:text-gold transition-colors no-underline">
+                              <span className="text-[9px]">▶</span>
+                              <span>示范</span>
+                            </a>
+                          )}
                         </div>
                       ))}
                     </motion.div>
