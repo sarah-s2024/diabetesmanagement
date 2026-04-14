@@ -541,9 +541,9 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
   const mealChartData = {
     labels: meals.map(m => m.name),
     datasets: [
-      { label: '蛋白质(g)', data: meals.map(m => m.p), backgroundColor: 'rgba(99,102,241,0.82)', borderRadius: 4, stack: 'm' },
-      { label: '脂肪(g)', data: meals.map(m => m.f), backgroundColor: 'rgba(217,119,6,0.75)', borderRadius: 0, stack: 'm' },
-      { label: '碳水(g)', data: meals.map(m => m.c), backgroundColor: 'rgba(37,99,235,0.78)', borderRadius: 4, stack: 'm' },
+      { label: '蛋白质(g)', data: meals.map(m => m.p), backgroundColor: 'rgba(200,169,125,0.85)', borderRadius: 4, stack: 'm' },
+      { label: '脂肪(g)', data: meals.map(m => m.f), backgroundColor: 'rgba(212,168,75,0.70)', borderRadius: 0, stack: 'm' },
+      { label: '碳水(g)', data: meals.map(m => m.c), backgroundColor: 'rgba(107,159,212,0.75)', borderRadius: 4, stack: 'm' },
     ]
   }
   const exerciseChartData = {
