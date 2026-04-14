@@ -134,7 +134,7 @@ export default function HistoryPage() {
               {dailyRecords.map(r => (
                 <tr key={r.record_date} className="hover:bg-surface2/50 transition-colors">
                   <td className="py-2 px-2.5 border-b border-border2">{r.record_date.slice(5)}</td>
-                  <td className={`py-2 px-2.5 border-b border-border2 font-medium ${r.fasting_glucose ? (r.fasting_glucose <= 100 ? 'text-green' : r.fasting_glucose <= 130 ? 'text-gold' : 'text-red') : 'text-muted'}`}>
+                  <td className={`py-2 px-2.5 border-b border-border2 font-medium ${r.fasting_glucose ? (r.fasting_glucose <= 99 ? 'text-green' : r.fasting_glucose <= 125 ? 'text-gold' : 'text-red') : 'text-muted'}`}>
                     {r.fasting_glucose || '--'}
                   </td>
                   <td className="py-2 px-2.5 border-b border-border2">{r.post_meal_glucose || '--'}</td>
