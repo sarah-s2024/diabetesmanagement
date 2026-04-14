@@ -96,30 +96,31 @@ function buildInsights(tirPct: number | null, _avg: number | null, sd: number | 
 function BmiGauge({ bmi }: { bmi: number }) {
   const label = bmi < 18.5 ? '偏轻' : bmi < 25 ? '正常' : bmi < 30 ? '超重' : '肥胖'
   const color = bmi < 18.5 ? '#6b9fd4' : bmi < 25 ? '#5cb88a' : bmi < 30 ? '#d4a84b' : '#e06464'
-  const r = 58, cx = 78, cy = 68
-  const toXY = (deg: number) => {
-    const rad = (deg - 90) * Math.PI / 180
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+  const r = 60, cx = 80, cy = 68
+  // pos 0 = left end, 90 = top, 180 = right end — semicircle through the top
+  const toXY = (pos: number) => {
+    const rad = (180 - pos) * Math.PI / 180
+    return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) }
   }
-  const arc = (startDeg: number, endDeg: number, clr: string) => {
-    const s = toXY(startDeg), e = toXY(endDeg)
-    return <path d={`M ${s.x} ${s.y} A ${r} ${r} 0 0 1 ${e.x} ${e.y}`} fill="none" stroke={clr} strokeWidth="9" strokeLinecap="butt" />
+  const arc = (from: number, to: number, clr: string) => {
+    const s = toXY(from), e = toXY(to)
+    return <path d={`M ${s.x.toFixed(1)} ${s.y.toFixed(1)} A ${r} ${r} 0 0 1 ${e.x.toFixed(1)} ${e.y.toFixed(1)}`}
+      fill="none" stroke={clr} strokeWidth="10" strokeLinecap="butt" />
   }
-  const needleDeg = Math.min(Math.max((bmi - 15) / (40 - 15) * 180, 0), 180)
-  const needleRad = (needleDeg - 90) * Math.PI / 180
-  const nx = cx + (r - 6) * Math.cos(needleRad), ny = cy + (r - 6) * Math.sin(needleRad)
+  const needlePos = Math.min(Math.max((bmi - 15) / (40 - 15) * 180, 0), 180)
+  const tip = toXY(needlePos)
   return (
     <div className="flex flex-col items-center flex-shrink-0">
-      <svg width="156" height="78" viewBox="0 0 156 78">
+      <svg width="160" height="76" viewBox="0 0 160 76">
         {arc(0, 45, '#6b9fd4')}
         {arc(45, 90, '#5cb88a')}
         {arc(90, 135, '#d4a84b')}
         {arc(135, 180, '#e06464')}
-        <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+        <line x1={cx} y1={cy} x2={tip.x.toFixed(1)} y2={tip.y.toFixed(1)} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
         <circle cx={cx} cy={cy} r="4" fill={color} />
-        <text x={cx} y={cy - 12} textAnchor="middle" fill={color} fontSize="14" fontWeight="700">{bmi.toFixed(1)}</text>
+        <text x={cx} y={cy - 14} textAnchor="middle" fill={color} fontSize="14" fontWeight="700">{bmi.toFixed(1)}</text>
       </svg>
-      <div className="text-[10px] font-semibold uppercase tracking-wider -mt-1" style={{ color }}>{label}</div>
+      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color }}>{label}</div>
     </div>
   )
 }
