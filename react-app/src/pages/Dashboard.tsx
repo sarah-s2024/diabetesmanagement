@@ -76,16 +76,19 @@ function buildInsights(tirPct: number | null, _avg: number | null, sd: number | 
   if (tirPct >= 90) items.push({ icon: '🎯', title: '血糖控制优秀', desc: `TIR ${tirPct}%，持续保持！` })
   else if (tirPct >= 70) items.push({ icon: '💪', title: '控糖良好', desc: `TIR ${tirPct}%，继续努力` })
   else items.push({ icon: '⚠️', title: '需要关注', desc: `TIR ${tirPct}%，建议调整方案并咨询医生` })
-  if (sd != null && sd > 40) items.push({ icon: '〰️', title: '血糖波动较大', desc: `标准差 ${sd} mg/dL，注意饮食规律` })
+  // SD >30 is concerning for non-diabetics (normal healthy SD typically <20)
+  if (sd != null && sd > 30) items.push({ icon: '〰️', title: '血糖波动偏大', desc: `标准差 ${sd} mg/dL（正常人参考 <20），注意饮食规律` })
   if (hba1c) {
-    if (hba1c < 6) items.push({ icon: '🌟', title: 'HbA1c 达优', desc: `${hba1c}% 非常理想` })
-    else if (hba1c < 7) items.push({ icon: '✅', title: 'HbA1c 良好', desc: `${hba1c}%，保持当前状态` })
-    else items.push({ icon: '🩸', title: 'HbA1c 偏高', desc: `${hba1c}%，注意饮食控制` })
+    // ADA: <5.7% normal, 5.7–6.4% pre-diabetic, ≥6.5% diabetic
+    if (hba1c < 5.7) items.push({ icon: '🌟', title: 'HbA1c 正常', desc: `${hba1c}%，处于正常范围（<5.7%），继续保持` })
+    else if (hba1c < 6.5) items.push({ icon: '⚠️', title: 'HbA1c 偏高', desc: `${hba1c}%，属前驱糖尿病范围（5.7–6.4%），建议加强饮食控制` })
+    else items.push({ icon: '🩸', title: 'HbA1c 过高', desc: `${hba1c}%，已达糖尿病诊断标准（≥6.5%），请尽快就诊` })
   }
   if (fasting) {
-    if (fasting <= 100) items.push({ icon: '🌙', title: '空腹血糖正常', desc: `${fasting} mg/dL 达标` })
-    else if (fasting <= 130) items.push({ icon: '🌤️', title: '空腹血糖偏高', desc: `${fasting} mg/dL，可关注夜间饮食` })
-    else items.push({ icon: '🌡️', title: '空腹血糖过高', desc: `${fasting} mg/dL，建议就诊` })
+    // ADA fasting: <100 normal, 100–125 pre-diabetic, ≥126 diabetic
+    if (fasting <= 99) items.push({ icon: '🌙', title: '空腹血糖正常', desc: `${fasting} mg/dL，处于正常范围（70–99）` })
+    else if (fasting <= 125) items.push({ icon: '🌤️', title: '空腹血糖偏高', desc: `${fasting} mg/dL，属前驱糖尿病范围，建议减少精制碳水` })
+    else items.push({ icon: '🌡️', title: '空腹血糖过高', desc: `${fasting} mg/dL，已达糖尿病诊断标准，请及时就诊` })
   }
   const h = new Date().getHours()
   if (h >= 14 && h <= 16) items.push({ icon: '🏃', title: '下午是运动好时机', desc: '饭后 1–2 小时有氧运动有助于降低血糖' })
