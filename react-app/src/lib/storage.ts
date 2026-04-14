@@ -54,3 +54,25 @@ export function getHeight(): number {
 export function setHeight(cm: number) {
   encryptSet(HEIGHT_KEY, String(cm))
 }
+
+// REE & weekly weight goal stored plain (non-sensitive settings)
+const REE_KEY = 'dm_ree_kcal'
+const WEIGHT_GOAL_KEY = 'dm_weight_goal_lbs'
+
+export function getRee(): number {
+  const v = localStorage.getItem(REE_KEY)
+  return v ? parseFloat(v) : 0
+}
+
+export function setRee(kcal: number) {
+  localStorage.setItem(REE_KEY, String(kcal))
+}
+
+export function getWeightGoalLbs(): number {
+  const v = localStorage.getItem(WEIGHT_GOAL_KEY)
+  return v ? parseFloat(v) : 0
+}
+
+export function setWeightGoalLbs(lbs: number) {
+  localStorage.setItem(WEIGHT_GOAL_KEY, String(lbs))
+}
