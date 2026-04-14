@@ -587,9 +587,9 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
             <Bar data={mealChartData} options={{ ...baseOpts, plugins: { legend: { display: true, position: 'top' as const, labels: { color: '#a09882', font: { size: 10 }, boxWidth: 8, padding: 12 } } } } as any} />
           </div>
           <div className="flex gap-4 mt-3 mb-4 text-[11px] flex-wrap">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(99,102,241,0.82)' }} />蛋白 {totalP}g</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(217,119,6,0.75)' }} />脂肪 {totalF}g</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(37,99,235,0.78)' }} />碳水 {totalC}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(200,169,125,0.85)' }} />蛋白 {totalP}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(212,168,75,0.70)' }} />脂肪 {totalF}g</span>
+            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded" style={{ background: 'rgba(107,159,212,0.75)' }} />碳水 {totalC}g</span>
           </div>
           <div className="space-y-2">
             {meals.map((m, i) => (
