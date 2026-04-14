@@ -175,7 +175,7 @@ export default function Dashboard() {
   }, [cgmData])
 
   const bodyMetrics = useMemo(() => {
-    const heightCm = cfg?.height_cm || 170
+    const heightCm = parseInt(localStorage.getItem('dm_height_cm') || '0') || cfg?.height_cm || 170
     const weightRec = dailyRecords.find(r => r.weight_lbs)
     const weightLbs = weightRec?.weight_lbs ?? null
     const weightKg = weightLbs ? weightLbs * 0.453592 : null
