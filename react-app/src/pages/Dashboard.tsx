@@ -5,7 +5,7 @@ import { Bar, Line } from 'react-chartjs-2'
 import Card from '../components/Card'
 import { useApp } from '../contexts/AppContext'
 import { getConfig } from '../lib/config'
-import { getActiveMeds } from '../lib/storage'
+import { getActiveMeds, getRee, getWeightGoalLbs } from '../lib/storage'
 import { WEEK_PLAN } from '../lib/constants'
 import { callAi, getAiProvider, parseAiStream } from '../lib/ai-client'
 
