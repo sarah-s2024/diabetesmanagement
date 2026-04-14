@@ -598,8 +598,8 @@ function MealExerciseCard({ plan }: { plan: NutritionPlan | null }) {
     ]
   }
   const exerciseChartData = {
-    labels: WEEK_PLAN.map(d => d.name),
-    datasets: [{ data: WEEK_PLAN.map(d => d.duration || 5), backgroundColor: WEEK_PLAN.map(d => TYPE_COLORS[d.type]), borderRadius: 8, barPercentage: 0.6 }]
+    labels: activePlan.map(d => d.name),
+    datasets: [{ data: activePlan.map(d => d.duration || 5), backgroundColor: activePlan.map(d => TYPE_COLORS[d.type]), borderRadius: 8, barPercentage: 0.6 }]
   }
   const baseOpts = {
     responsive: true, maintainAspectRatio: false,
