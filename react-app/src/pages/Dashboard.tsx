@@ -493,12 +493,12 @@ export default function Dashboard() {
 
 /* ── Meal/Exercise card ── */
 const BASE_MEALS = [
-  { name: '早餐', time: '08:00', kcal: 360, p: 26, f: 18, c: 24, tag: '蛋白质优先', foods: '2全蛋 + 额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄' },
-  { name: '上午加餐', time: '10:30', kcal: 175, p: 26, f: 7, c: 4, tag: '补充蛋白', foods: '蛋白粉1勺（30g）· 混合坚果10g' },
-  { name: '午餐', time: '13:00', kcal: 443, p: 54, f: 10, c: 36, tag: '碳水高峰', foods: '鸡胸肉150g · 糙米饭100g · 西兰花150g · 橄榄油1茶匙' },
-  { name: '下午加餐', time: '14:30', kcal: 156, p: 33, f: 2, c: 3, tag: '双倍蛋白', foods: '蛋白粉1勺 · 胶原蛋白肽1勺' },
-  { name: '晚餐', time: '17:30', kcal: 428, p: 42, f: 17, c: 28, tag: '控碳稳糖', foods: '三文鱼130g · 烤红薯80g · 芦笋150g · 嫩豆腐80g' },
-  { name: '晚间可选', time: '21:30', kcal: 35, p: 3, f: 1, c: 4, tag: '低热量', foods: '花草茶 或 少量低脂牛奶' },
+  { name: '早餐', time: '08:00', kcal: 360, p: 26, f: 18, c: 24, tag: '蛋白质优先', foods: '2全蛋 + 额外2蛋白 · 牛油果⅓个 · 全麦面包1片 · 菠菜/番茄 · 黑咖啡', note: '进食顺序：蛋白质 → 蔬菜 → 碳水' },
+  { name: '上午加餐', time: '10:30', kcal: 175, p: 26, f: 7, c: 4, tag: '补充蛋白', foods: '蛋白粉1勺（30g）· 混合坚果10g（杏仁/核桃）', note: '搭配 Sunfiber 膳食纤维冲服，增加饱腹感' },
+  { name: '午餐', time: '13:00', kcal: 443, p: 54, f: 10, c: 36, tag: '碳水高峰', foods: '鸡胸肉150g · 糙米饭100g · 西兰花150g · 混合生菜 · 橄榄油1茶匙', note: '胰岛素敏感性最高，可替换：三文鱼120g / 瘦牛肉150g；糙米→红薯100g或藜麦80g' },
+  { name: '下午加餐', time: '14:30', kcal: 156, p: 33, f: 2, c: 3, tag: '双倍蛋白', foods: '蛋白粉1勺 · 胶原蛋白肽1勺（10g）' },
+  { name: '晚餐', time: '17:30', kcal: 428, p: 42, f: 17, c: 28, tag: '控碳稳糖', foods: '三文鱼130g · 烤红薯80g · 芦笋150g · 嫩豆腐80g · 味噌汤', note: '可替换：虾仁150g / 鸡腿去皮130g；红薯→南瓜100g（碳水更低）' },
+  { name: '晚间可选', time: '21:30', kcal: 35, p: 3, f: 1, c: 4, tag: '可选', foods: '花草茶 / 温脱脂牛奶100ml' },
 ]
 const BASE_KCAL = BASE_MEALS.reduce((s, m) => s + m.kcal, 0)
 const BASE_P = BASE_MEALS.reduce((s, m) => s + m.p, 0)
