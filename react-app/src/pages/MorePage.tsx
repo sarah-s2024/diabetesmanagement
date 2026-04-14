@@ -293,6 +293,7 @@ export default function MorePage() {
 
       {/* Personal settings */}
       <Card title="个人设置">
+        {/* Height */}
         <div className="flex items-end gap-2.5">
           <div className="flex-1">
             <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">身高 (cm)</label>
@@ -310,7 +311,56 @@ export default function MorePage() {
           </button>
         </div>
         {heightMsg && <p className="text-xs mt-2 text-muted">{heightMsg}</p>}
-        <p className="text-[11px] text-muted2 mt-2.5 leading-relaxed">身高用于计算 BMI 及每日热量预算，保存后在 Dashboard 自动更新</p>
+        <p className="text-[11px] text-muted2 mt-2 leading-relaxed">身高用于计算 BMI 及每日热量预算</p>
+
+        <div className="border-t border-border mt-4 pt-4 space-y-4">
+          {/* REE */}
+          <div>
+            <div className="flex items-end gap-2.5">
+              <div className="flex-1">
+                <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">静息能量消耗 REE (kcal/天)</label>
+                <input
+                  type="number"
+                  value={reeInput}
+                  onChange={e => setReeInput(e.target.value)}
+                  placeholder="例如：1500"
+                  className="w-full py-2.5 px-3 border border-border rounded-[10px] text-sm bg-surface2 text-text outline-none transition-all focus:border-gold/40 focus:bg-surface3"
+                />
+              </div>
+              <button onClick={saveRee}
+                className="py-2.5 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer active:scale-[0.97] flex-shrink-0">
+                保存
+              </button>
+            </div>
+            {reeMsg && <p className="text-xs mt-2 text-muted">{reeMsg}</p>}
+            <p className="text-[11px] text-muted2 mt-2 leading-relaxed">可通过智能体脂秤或医院测量获得，用于精准计算每日热量目标</p>
+          </div>
+
+          {/* Weekly weight loss goal */}
+          <div>
+            <div className="flex items-end gap-2.5">
+              <div className="flex-1">
+                <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">每周减重目标 (lbs/周)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  value={weightGoalInput}
+                  onChange={e => setWeightGoalInput(e.target.value)}
+                  placeholder="例如：1（建议 0.5–2 lbs）"
+                  className="w-full py-2.5 px-3 border border-border rounded-[10px] text-sm bg-surface2 text-text outline-none transition-all focus:border-gold/40 focus:bg-surface3"
+                />
+              </div>
+              <button onClick={saveWeightGoal}
+                className="py-2.5 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer active:scale-[0.97] flex-shrink-0">
+                保存
+              </button>
+            </div>
+            {weightGoalMsg && <p className="text-xs mt-2 text-muted">{weightGoalMsg}</p>}
+            <p className="text-[11px] text-muted2 mt-2 leading-relaxed">每减 1 lbs/周对应约 500 kcal/天热量缺口，建议不超过 2 lbs/周</p>
+          </div>
+        </div>
+
+        <p className="text-[11px] text-muted2 mt-3 leading-relaxed border-t border-border pt-3">保存后膳食与运动计划将根据所有指标重新生成</p>
       </Card>
 
       {/* Emergency guides */}
