@@ -230,7 +230,11 @@ export default function Dashboard() {
       avg: stats.avg, tir: stats.tir, sd: stats.sd,
       hba1c: bodyMetrics.hba1c ?? undefined,
       meds: meds.map(m => `${m.drug}${m.dose ? ' ' + m.dose : ''}`).join('；') || '无',
-      kcalBase: totalKcal,
+      kcalTarget: totalKcal,
+      tdee: bodyMetrics.tdee,
+      deficit: bodyMetrics.deficit,
+      ree: bodyMetrics.ree || undefined,
+      weeklyGoalLbs: bodyMetrics.weeklyGoalLbs || undefined,
     }).then(plan => { if (plan) setNutritionPlan(plan) })
   }, [bodyMetrics, stats, meds])
 
