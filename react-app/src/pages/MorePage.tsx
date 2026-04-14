@@ -264,6 +264,28 @@ export default function MorePage() {
         </AnimatePresence>
       </Card>
 
+      {/* Personal settings */}
+      <Card title="个人设置">
+        <div className="flex items-end gap-2.5">
+          <div className="flex-1">
+            <label className="block text-[10px] text-muted uppercase tracking-wider font-semibold mb-1.5">身高 (cm)</label>
+            <input
+              type="number"
+              value={heightInput}
+              onChange={e => setHeightInput(e.target.value)}
+              placeholder="例如：170"
+              className="w-full py-2.5 px-3 border border-border rounded-[10px] text-sm bg-surface2 text-text outline-none transition-all focus:border-gold/40 focus:bg-surface3"
+            />
+          </div>
+          <button onClick={saveHeight}
+            className="py-2.5 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer active:scale-[0.97] flex-shrink-0">
+            保存
+          </button>
+        </div>
+        {heightMsg && <p className="text-xs mt-2 text-muted">{heightMsg}</p>}
+        <p className="text-[11px] text-muted2 mt-2.5 leading-relaxed">身高用于计算 BMI 及每日热量预算，保存后在 Dashboard 自动更新</p>
+      </Card>
+
       {/* Emergency guides */}
       <div className="border border-red/20 bg-red/4 rounded-[18px] p-[18px] mb-3">
         <div className="text-[11px] font-semibold text-red uppercase tracking-wider mb-3.5">🚨 低血糖应急 — 15/15 原则</div>
