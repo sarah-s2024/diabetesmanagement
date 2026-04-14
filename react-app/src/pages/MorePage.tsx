@@ -68,10 +68,18 @@ export default function MorePage() {
   const [parsed, setParsed] = useState<ParsedRow[]>([])
   const [heightInput, setHeightInput] = useState('')
   const [heightMsg, setHeightMsg] = useState('')
+  const [reeInput, setReeInput] = useState('')
+  const [reeMsg, setReeMsg] = useState('')
+  const [weightGoalInput, setWeightGoalInput] = useState('')
+  const [weightGoalMsg, setWeightGoalMsg] = useState('')
 
   useEffect(() => {
     const saved = localStorage.getItem('dm_height_cm')
     if (saved) setHeightInput(saved)
+    const ree = getRee()
+    if (ree) setReeInput(String(ree))
+    const goal = getWeightGoalLbs()
+    if (goal) setWeightGoalInput(String(goal))
   }, [])
 
   const saveHeight = () => {
@@ -80,6 +88,24 @@ export default function MorePage() {
     localStorage.setItem('dm_height_cm', String(Math.round(val)))
     setHeightMsg('✅ 已保存，下次打开 Dashboard 即生效')
     setTimeout(() => setHeightMsg(''), 3000)
+  }
+
+  const saveRee = () => {
+    const val = parseFloat(reeInput)
+    if (!val || val < 800 || val > 5000) { setReeMsg('请输入有效 REE（800–5000 kcal）'); return }
+    setRee(Math.round(val))
+    localStorage.removeItem('dm_ai_nutrition')
+    setReeMsg('✅ 已保存，膳食计划将重新生成')
+    setTimeout(() => setReeMsg(''), 3000)
+  }
+
+  const saveWeightGoal = () => {
+    const val = parseFloat(weightGoalInput)
+    if (isNaN(val) || val < 0 || val > 3) { setWeightGoalMsg('请输入合理目标（0–3 lbs/周）'); return }
+    setWeightGoalLbs(val)
+    localStorage.removeItem('dm_ai_nutrition')
+    setWeightGoalMsg('✅ 已保存，膳食计划将重新生成')
+    setTimeout(() => setWeightGoalMsg(''), 3000)
   }
   const [fileName, setFileName] = useState('')
   const [uploadMsg, setUploadMsg] = useState('')
