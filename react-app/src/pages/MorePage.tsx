@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Card, { Badge } from '../components/Card'
 import { upsertCgmBatch } from '../lib/supabase'
 import { useApp } from '../contexts/AppContext'
+import { getRee, setRee, getWeightGoalLbs, setWeightGoalLbs } from '../lib/storage'
 
 interface ParsedRow { ts: string; val: number }
 
