@@ -3,6 +3,7 @@ import { Chart as ChartJS, registerables } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 import Card, { Badge } from '../components/Card'
 import { useApp } from '../contexts/AppContext'
+import { deleteDailyRecord } from '../lib/supabase'
 
 ChartJS.register(...registerables)
 
