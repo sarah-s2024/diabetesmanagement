@@ -65,6 +65,21 @@ function parseLibreCSV(text: string): ParsedRow[] {
 export default function MorePage() {
   const { refreshData, user } = useApp()
   const [parsed, setParsed] = useState<ParsedRow[]>([])
+  const [heightInput, setHeightInput] = useState('')
+  const [heightMsg, setHeightMsg] = useState('')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('dm_height_cm')
+    if (saved) setHeightInput(saved)
+  }, [])
+
+  const saveHeight = () => {
+    const val = parseFloat(heightInput)
+    if (!val || val < 100 || val > 250) { setHeightMsg('请输入有效身高（100–250 cm）'); return }
+    localStorage.setItem('dm_height_cm', String(Math.round(val)))
+    setHeightMsg('✅ 已保存，下次打开 Dashboard 即生效')
+    setTimeout(() => setHeightMsg(''), 3000)
+  }
   const [fileName, setFileName] = useState('')
   const [uploadMsg, setUploadMsg] = useState('')
   const [uploadPct, setUploadPct] = useState(0)
