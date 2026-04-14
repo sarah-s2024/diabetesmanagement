@@ -434,10 +434,10 @@ export default function Dashboard() {
       {/* Body metrics with BMI gauge */}
       {(bodyMetrics.bmi != null || bodyMetrics.weightLbs != null) && (
         <Card title="身体指标">
-          {/* Target range pills */}
+          {/* Target range pills — normal (non-diabetic) standards */}
           <div className="flex gap-2 mb-4">
-            <span className="text-[11px] font-medium text-green bg-green/10 border border-green/20 px-3 py-1 rounded-full">空腹 80–130</span>
-            <span className="text-[11px] font-medium text-green bg-green/10 border border-green/20 px-3 py-1 rounded-full">餐后 &lt;180</span>
+            <span className="text-[11px] font-medium text-green bg-green/10 border border-green/20 px-3 py-1 rounded-full">空腹 70–99</span>
+            <span className="text-[11px] font-medium text-green bg-green/10 border border-green/20 px-3 py-1 rounded-full">餐后 &lt;140</span>
           </div>
           <div className="flex items-start gap-4">
             {/* BMI gauge + label */}
