@@ -17,34 +17,55 @@ function getGreeting() {
 }
 
 /* ── AI Nutrition Plan ── */
+interface AiWeekDay {
+  dow: number
+  type: 'strength' | 'cardio' | 'yoga' | 'rest'
+  duration: number
+  intensity: string
+  label: string
+}
+
 interface NutritionPlan {
   kcal: number; proteinG: number; fatG: number; carbG: number
   mealNote?: string; exerciseFocus?: string; aiGenerated?: boolean; date?: string
+  weekPlan?: AiWeekDay[]
 }
 
 async function loadAiNutritionPlan(snap: {
   weightKg: number; heightCm: number; bmi: number
   avg: number; tir: number; sd: number; hba1c?: number
-  meds: string; kcalBase: number
+  meds: string; kcalTarget: number; tdee: number; deficit: number
+  ree?: number; weeklyGoalLbs?: number
 }): Promise<NutritionPlan | null> {
   if (!getAiProvider()) return null
   const today = new Date().toISOString().slice(0, 10)
   const cached = JSON.parse(localStorage.getItem('dm_ai_nutrition') || 'null')
   if (cached?.date === today) return cached
 
-  const prompt = `你是糖尿病营养顾问。根据以下健康数据输出今日营养方案，仅返回一行JSON，不含任何说明文字：
+  const reeSection = snap.ree
+    ? `静息能量消耗(REE)：${snap.ree} kcal/天 → 估算TDEE约 ${snap.tdee} kcal（REE×1.35）`
+    : `估算TDEE：${snap.tdee} kcal`
+  const goalSection = snap.weeklyGoalLbs
+    ? `每周减重目标：${snap.weeklyGoalLbs} lbs（热量缺口约 ${snap.deficit} kcal/天）`
+    : ''
+
+  const prompt = `你是糖尿病营养与运动顾问。根据以下健康数据，仅返回一行JSON，不含任何说明文字：
 体重${snap.weightKg.toFixed(1)}kg 身高${snap.heightCm}cm BMI${snap.bmi.toFixed(1)}
+${reeSection}
+${goalSection}
+目标每日热量：${snap.kcalTarget} kcal
 近7日CGM均值${snap.avg}mg/dL TIR${snap.tir}% 血糖标准差${snap.sd}
 ${snap.hba1c ? `HbA1c: ${snap.hba1c}%` : ''}
 当前用药：${snap.meds}
-基础热量预算：${snap.kcalBase}kcal
 
-返回格式（仅JSON，无其他文字）：
-{"kcal":数字,"proteinG":数字,"fatG":数字,"carbG":数字,"mealNote":"≤25字建议","exerciseFocus":"≤35字运动重点"}`
+要求：蛋白质≥体重kg×1.6g；控制碳水以稳定血糖；weekPlan结合减重目标与用药安排7天运动，type只能用strength/cardio/yoga/rest
+
+返回格式（一行JSON，无其他文字）：
+{"kcal":数字,"proteinG":数字,"fatG":数字,"carbG":数字,"mealNote":"≤25字","exerciseFocus":"≤35字","weekPlan":[{"dow":1,"type":"strength","duration":35,"intensity":"中等","label":"上肢力量"},{"dow":2,"type":"cardio","duration":30,"intensity":"中低","label":"快走有氧"},{"dow":3,"type":"strength","duration":35,"intensity":"中等","label":"下肢力量"},{"dow":4,"type":"cardio","duration":25,"intensity":"低","label":"恢复步行"},{"dow":5,"type":"strength","duration":30,"intensity":"中等","label":"全身训练"},{"dow":6,"type":"yoga","duration":30,"intensity":"低","label":"拉伸恢复"},{"dow":0,"type":"rest","duration":0,"intensity":"—","label":"完全休息"}]}`
 
   try {
     const r = await callAi({
-      model: 'claude-haiku-4-5-20251001', max_tokens: 200, stream: true,
+      model: 'claude-haiku-4-5-20251001', max_tokens: 500, stream: true,
       messages: [{ role: 'user', content: prompt }]
     })
     if (!r) return null
