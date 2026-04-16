@@ -492,7 +492,6 @@ export default function Dashboard() {
               {[
                 { label: 'BMI', val: bodyMetrics.bmi != null ? bodyMetrics.bmi.toFixed(1) : '--', col: bodyMetrics.bmi != null ? (bodyMetrics.bmi < 18.5 ? 'text-blue' : bodyMetrics.bmi < 25 ? 'text-green' : bodyMetrics.bmi < 30 ? 'text-gold' : 'text-red') : '' },
                 { label: '体重', val: bodyMetrics.weightLbs ? bodyMetrics.weightLbs + ' lbs' : '--', col: '' },
-                { label: 'HbA1c', val: bodyMetrics.hba1c ? bodyMetrics.hba1c + '%' : '--', col: bodyMetrics.hba1c ? (bodyMetrics.hba1c < 5.7 ? 'text-green' : bodyMetrics.hba1c < 6.5 ? 'text-gold' : 'text-red') : '' },
                 { label: '热量预算', val: bodyMetrics.totalKcal + ' kcal', col: '' },
               ].map(m => (
                 <div key={m.label} className="flex items-center justify-between py-1.5 border-b border-border2 last:border-0">
