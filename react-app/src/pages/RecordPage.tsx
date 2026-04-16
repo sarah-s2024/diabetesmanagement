@@ -149,17 +149,17 @@ export default function RecordPage() {
               <input type="date" value={medStart} onChange={e => setMedStart(e.target.value)} className={fieldClass} />
             </div>
           </div>
-          <button onClick={addMed} className="mt-2.5 py-2 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer active:scale-[0.97]">
-            添加药物记录
+          <button onClick={addMed} disabled={medLoading} className="mt-2.5 py-2 px-4 rounded-xl text-sm font-medium bg-gradient-to-r from-gold to-[#a08560] text-bg border-none cursor-pointer active:scale-[0.97] disabled:opacity-50">
+            {medLoading ? '保存中...' : '添加药物记录'}
           </button>
           {medMsg && <p className="text-xs mt-2">{medMsg}</p>}
         </div>
 
         {/* Med list */}
-        {meds.length === 0 ? (
+        {medications.length === 0 ? (
           <p className="text-sm text-muted text-center py-6">暂无药物记录</p>
-        ) : meds.map(m => {
-          const active = !m.stopDate || m.stopDate >= today
+        ) : medications.map(m => {
+          const active = !m.stop_date || m.stop_date >= today
           return (
             <div key={m.id} className="bg-surface2 border border-border rounded-xl p-3.5 mb-2.5 flex items-start gap-3">
               <span className="text-[22px] flex-shrink-0 mt-0.5">💊</span>
@@ -171,8 +171,8 @@ export default function RecordPage() {
                 </span>
                 <div className="text-[11px] text-muted mt-1 leading-relaxed">
                   {m.dose && <><b>剂量：</b>{m.dose}<br /></>}
-                  <b>开始：</b>{m.startDate}
-                  {m.stopDate && <><br /><b>停药：</b>{m.stopDate}</>}
+                  <b>开始：</b>{m.start_date}
+                  {m.stop_date && <><br /><b>停药：</b>{m.stop_date}</>}
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 flex-shrink-0">
