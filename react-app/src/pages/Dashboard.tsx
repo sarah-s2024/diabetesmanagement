@@ -216,7 +216,11 @@ export default function Dashboard() {
     return { weightLbs, weightKg, bmi, hba1c, fasting, heightCm, totalKcal, ree, weeklyGoalLbs, tdee, deficit }
   }, [dailyRecords, cfg])
 
-  const meds = useMemo(() => getActiveMeds(), [])
+  const today = new Date().toISOString().slice(0, 10)
+  const meds = useMemo(
+    () => medications.filter(m => !m.stop_date || m.stop_date >= today),
+    [medications]
+  )
 
   // AI nutrition plan: show default immediately, update when AI returns
   useEffect(() => {
