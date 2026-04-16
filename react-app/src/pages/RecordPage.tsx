@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import Card from '../components/Card'
-import { upsertDailyRecord } from '../lib/supabase'
-import { getMeds, saveMeds } from '../lib/storage'
+import { upsertDailyRecord, insertMedication, updateMedication, deleteMedication } from '../lib/supabase'
 import { MED_DRUGS } from '../lib/constants'
 import { useApp } from '../contexts/AppContext'
 
 export default function RecordPage() {
-  const { refreshData, user } = useApp()
+  const { refreshData, refreshMeds, user, medications } = useApp()
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [fasting, setFasting] = useState('')
   const [postMeal, setPostMeal] = useState('')
@@ -16,12 +15,12 @@ export default function RecordPage() {
   const [hba1c, setHba1c] = useState('')
   const [notes, setNotes] = useState('')
   const [msg, setMsg] = useState('')
-  const [meds, setMeds] = useState(getMeds())
   const [cat, setCat] = useState('')
   const [drug, setDrug] = useState('')
   const [dose, setDose] = useState('')
   const [medStart, setMedStart] = useState(new Date().toISOString().slice(0, 10))
   const [medMsg, setMedMsg] = useState('')
+  const [medLoading, setMedLoading] = useState(false)
 
   const saveRecord = async () => {
     try {
