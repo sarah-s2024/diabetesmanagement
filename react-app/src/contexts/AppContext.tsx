@@ -35,7 +35,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>({
     config: null, loading: true, user: null,
     activePage: 'dashboard', chatOpen: false, cgmData: [], dailyRecords: [],
-    gmi: null, connected: false,
+    medications: [], gmi: null, connected: false,
   })
 
   // Keep a ref to user so refreshData always sees latest
