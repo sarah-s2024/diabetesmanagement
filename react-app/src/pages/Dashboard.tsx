@@ -234,6 +234,7 @@ export default function Dashboard() {
       avg: stats.avg, tir: stats.tir, sd: stats.sd,
       hba1c: bodyMetrics.hba1c ?? undefined,
       meds: meds.map(m => `${m.drug}${m.dose ? ' ' + m.dose : ''}`).join('；') || '无',
+
       kcalTarget: totalKcal,
       tdee: bodyMetrics.tdee,
       deficit: bodyMetrics.deficit,
