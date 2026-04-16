@@ -52,18 +52,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const refreshMeds = useCallback(async () => {
+    const user = userRef.current
+    if (!getConfig()?.supabase_url || !user) return
+    const meds = await fetchMedications(user.id)
+    setState(s => ({ ...s, medications: meds }))
+  }, [])
+
   const refreshData = useCallback(async () => {
     const user = userRef.current
     if (!getConfig()?.supabase_url || !user) return
-    const [cgm, daily, allGlucose] = await Promise.all([
-      fetchCgmData(user.id), fetchDailyRecords(user.id), fetchAllCgmGlucose(user.id)
+    const [cgm, daily, allGlucose, meds] = await Promise.all([
+      fetchCgmData(user.id), fetchDailyRecords(user.id), fetchAllCgmGlucose(user.id), fetchMedications(user.id)
     ])
     let gmi: number | null = null
     if (allGlucose.length) {
       const mean = allGlucose.reduce((a, b) => a + b, 0) / allGlucose.length
       gmi = Math.round((3.31 + 0.02392 * mean) * 10) / 10
     }
-    setState(s => ({ ...s, cgmData: cgm, dailyRecords: daily, gmi }))
+    setState(s => ({ ...s, cgmData: cgm, dailyRecords: daily, medications: meds, gmi }))
   }, [])
 
   const onLogin = useCallback((user: User) => {
