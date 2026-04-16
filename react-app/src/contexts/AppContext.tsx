@@ -108,7 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [state.loading, state.user, onLogin])
 
   return (
-    <AppContext.Provider value={{ ...state, onLogin, lock, setActivePage, setChatOpen, refreshData }}>
+    <AppContext.Provider value={{ ...state, onLogin, lock, setActivePage, setChatOpen, refreshData, refreshMeds }}>
       {children}
     </AppContext.Provider>
   )
