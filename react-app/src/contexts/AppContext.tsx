@@ -88,7 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const lock = useCallback(() => {
     clearSession()
-    setState(s => ({ ...s, user: null, activePage: 'dashboard', cgmData: [], dailyRecords: [], gmi: null }))
+    setState(s => ({ ...s, user: null, activePage: 'dashboard', cgmData: [], dailyRecords: [], medications: [], gmi: null }))
   }, [])
 
   const setActivePage = useCallback((page: string) => {
