@@ -15,6 +15,7 @@ interface AppState {
   chatOpen: boolean
   cgmData: CgmReading[]
   dailyRecords: DailyRecord[]
+  medications: MedicationRecord[]
   gmi: number | null
   connected: boolean
 }
@@ -25,6 +26,7 @@ interface AppContextType extends AppState {
   setActivePage: (page: string) => void
   setChatOpen: (open: boolean) => void
   refreshData: () => Promise<void>
+  refreshMeds: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextType>(null!)
