@@ -100,3 +100,54 @@ export async function upsertCgmBatch(userId: number, batch: { device_timestamp: 
   const { error } = await sb.from('cgm_readings').upsert(rows, { onConflict: 'user_id,device_timestamp', ignoreDuplicates: true })
   if (error) throw error
 }
+
+export interface MedicationRecord {
+  id: number
+  cat: string
+  drug: string
+  dose: string
+  start_date: string
+  stop_date: string | null
+}
+
+export async function fetchMedications(userId: number): Promise<MedicationRecord[]> {
+  const sb = getSupabase()
+  if (!sb) return []
+  const { data, error } = await sb.from('medications')
+    .select('id,cat,drug,dose,start_date,stop_date')
+    .eq('user_id', userId)
+    .order('start_date', { ascending: false })
+  if (error || !data) return []
+  return data as MedicationRecord[]
+}
+
+export async function insertMedication(userId: number, med: Omit<MedicationRecord, 'id'>): Promise<MedicationRecord> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not connected')
+  const { data, error } = await sb.from('medications')
+    .insert({ ...med, user_id: userId })
+    .select('id,cat,drug,dose,start_date,stop_date')
+    .single()
+  if (error || !data) throw error ?? new Error('Insert failed')
+  return data as MedicationRecord
+}
+
+export async function updateMedication(userId: number, id: number, updates: Partial<Omit<MedicationRecord, 'id'>>): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not connected')
+  const { error } = await sb.from('medications')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function deleteMedication(userId: number, id: number): Promise<void> {
+  const sb = getSupabase()
+  if (!sb) throw new Error('Supabase not connected')
+  const { error } = await sb.from('medications')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) throw error
+}
