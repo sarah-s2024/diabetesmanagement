@@ -150,7 +150,7 @@ function BmiGauge({ bmi }: { bmi: number }) {
 }
 
 export default function Dashboard() {
-  const { cgmData, dailyRecords, gmi, setActivePage, setChatOpen, user } = useApp()
+  const { cgmData, dailyRecords, medications, gmi, setActivePage, setChatOpen, user } = useApp()
   const cfg = getConfig()
   const [nutritionPlan, setNutritionPlan] = useState<NutritionPlan | null>(null)
   const planLoaded = useRef(false)
