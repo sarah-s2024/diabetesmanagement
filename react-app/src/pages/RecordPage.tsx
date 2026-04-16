@@ -41,25 +41,39 @@ export default function RecordPage() {
     }
   }
 
-  const addMed = () => {
+  const addMed = async () => {
     if (!cat || !drug) { setMedMsg('请选择药物类别和名称'); return }
-    const updated = [...meds, { id: Date.now(), cat, drug, dose, startDate: medStart }]
-    saveMeds(updated)
-    setMeds(updated)
-    setMedMsg('✅ 已添加')
-    setCat(''); setDrug(''); setDose('')
+    if (!user) { setMedMsg('请先登录'); return }
+    setMedLoading(true)
+    try {
+      await insertMedication(user.id, { cat, drug, dose, start_date: medStart, stop_date: null })
+      await refreshMeds()
+      setMedMsg('✅ 已添加')
+      setCat(''); setDrug(''); setDose('')
+    } catch (e: any) {
+      setMedMsg('❌ ' + e.message)
+    }
+    setMedLoading(false)
   }
 
-  const stopMed = (id: number) => {
-    const updated = meds.map(m => m.id === id ? { ...m, stopDate: new Date().toISOString().slice(0, 10) } : m)
-    saveMeds(updated)
-    setMeds(updated)
+  const stopMed = async (id: number) => {
+    if (!user) return
+    try {
+      await updateMedication(user.id, id, { stop_date: new Date().toISOString().slice(0, 10) })
+      await refreshMeds()
+    } catch (e: any) {
+      setMedMsg('❌ ' + e.message)
+    }
   }
 
-  const deleteMed = (id: number) => {
-    const updated = meds.filter(m => m.id !== id)
-    saveMeds(updated)
-    setMeds(updated)
+  const deleteMed = async (id: number) => {
+    if (!user) return
+    try {
+      await deleteMedication(user.id, id)
+      await refreshMeds()
+    } catch (e: any) {
+      setMedMsg('❌ ' + e.message)
+    }
   }
 
   const drugs = MED_DRUGS[cat] || []
