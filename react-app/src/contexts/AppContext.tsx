@@ -2,8 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import type { ReactNode } from 'react'
 import { loadConfig, getConfig } from '../lib/config'
 import type { AppConfig } from '../lib/config'
-import { initSupabase, fetchCgmData, fetchDailyRecords, fetchAllCgmGlucose } from '../lib/supabase'
-import type { CgmReading, DailyRecord } from '../lib/supabase'
+import { initSupabase, fetchCgmData, fetchDailyRecords, fetchAllCgmGlucose, fetchMedications } from '../lib/supabase'
+import type { CgmReading, DailyRecord, MedicationRecord } from '../lib/supabase'
 import { loadSession, saveSession, clearSession } from '../lib/auth'
 import type { User } from '../lib/auth'
 
